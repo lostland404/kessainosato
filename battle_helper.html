@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>【血祭之里】簡易戰鬥輔助 v1.1</title>
+<link href='data:image/svg+xml;utf8,&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"&gt; &lt;circle cx="16" cy="16" r="16" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="16" cy="16" r="9" fill="rgb(255, 255, 255)"/&gt; &lt;circle cx="16" cy="16" r="3.5" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="13" cy="13" r="1.5" fill="rgb(255, 255, 255)"/&gt;&lt;/svg&gt;' rel="icon" type="image/svg+xml">
+<style>
+@import url(https://fonts.googleapis.com/css2?family=Huninn&display=swap);
+* {
+    /*---預設顏色---*/
+    --米灰: rgb(245, 245, 245);
+    --淺灰: rgb(220, 220, 220);
+    --中灰: rgb(150, 150, 150);
+    --深灰: rgb(60, 60, 60);
+    --黑: rgb(0, 0, 0);
+    --白: rgb(255, 255, 255);
+    --紅: rgb(178, 34, 34);
+    --橘: rgb(252, 159, 77);
+    --紫: rgb(102, 51, 153);
+    /*---其他---*/
+    font-family: "Huninn", sans-serif;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    color: var(--黑);
+    background: var(--白);
+    min-height: 100vh;
+    padding: 2.5%;
+}
+.page {
+    max-width: 650px;
+    margin: 0 auto;
+}
+/*標題*/
+
+h1 {
+    color: var(--紅);
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.5%;
+}
+/*副標*/
+
+.sub {
+    color: var(--深灰);
+    font-size: 14px;
+    text-align: center;
+    letter-spacing: 0.05em;
+    margin: 1% 0 2.5%;
+}
+/* ── 通用區塊 ── */
+
+.section {
+    border: 2px solid var(--中灰);
+    border-radius: 15px;
+    margin-bottom: 2.5%;
+    overflow: hidden;
+}
+.section-head {
+    color: var(--黑);
+    background: var(--米灰);
+    padding: 1.5%;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.05em;
+    justify-content: space-between;
+    gap: 10px;
+}
+.section-body {
+    padding: 3.5%;
+}
+/* --- 角色列 --- */
+
+.unit-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5%;
+    gap: 10px;
+}
+/* 拖動移動排序 */
+
+.unit-row.drag-over {
+    outline: 2px dashed var(--紅);
+    border-radius: 5px;
+}
+.unit-row.dragging {
+    opacity: 0.3;
+}
+.drag-handle {
+    cursor: grab;
+}
+.drag-handle:active {
+    cursor: grabbing;
+}
+.unit-idx {
+    color: var(--黑);
+    font-size: 14px;
+    min-width: 30px;
+    text-align: right;
+    flex-shrink: 0;
+}
+input.f-name {
+    flex: 1;
+    height: 30px;
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    padding: 1%;
+    font-size: 14px;
+}
+.hp-label {
+    color: var(--深灰);
+    font-size: 11px;
+    flex-shrink: 0;
+}
+input.f-hp {
+    width: 60px;
+    min-height: 30px;
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    padding: 1%;
+    font-size: 14px;
+    text-align: center;
+    flex-shrink: 0;
+}
+input.f-name:focus, input.f-hp:focus {
+    border-color: var(--黑);
+    outline: none;
+}
+/* ── 統一按鈕 ── */
+
+/* 刪除小按鈕 */
+
+.btn-icon {
+    background: var(--白);
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.btn-icon:hover {
+    border-color: var(--紅);
+}
+.btn-icon.danger:hover {
+    color: var(--紅);
+    border-color: var(--紅);
+}
+/* 編輯回合按鈕 */
+
+.btn-primary, .btn-secondary, .btn-danger {
+    color: var(--白);
+    border: 2px solid var(--黑);
+    border-radius: 5px;
+    padding: 5px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-primary, .btn-secondary {
+    background: var(--深灰);
+}
+.btn-danger {
+    background: var(--紅);
+}
+.btn-primary:hover, .btn-secondary:hover, .btn-danger:hover {
+    filter: brightness(110%);
+}
+/* 新增角色、回合 */
+
+.btn-add, .btn-new-round {
+    color: var(--深灰);
+    background: var(--白);
+    border: 2px dashed var(--淺灰);
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    width: 100%;
+    padding: 1.5%;
+}
+.btn-add {
+    margin-top: 1.5%;
+}
+.btn-new-round {
+    padding: 1.5%;
+}
+.btn-add:hover, .btn-new-round:hover {
+    color: var(--深灰);
+    border-color: var(--中灰);
+}
+/* ── 行動順序 ── */
+
+.init-pool, .init-order-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    min-height: 30px;
+    margin-bottom: 1.5%;
+}
+.init-order-wrap {
+    align-items: center;
+}
+.init-slot {
+    color: var(--深灰);
+    background: var(--米灰);
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    width: 110px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+.init-slot.over {
+    border-color: var(--中灰);
+}
+.init-slot.filled {
+    color: var(--黑);
+    background: var(--白);
+    border-color: var(--中灰);
+    font-size: 14px;
+    cursor: grab;
+    padding: 0.5%;
+    justify-content: space-between;
+    gap: 5px;
+}
+.init-slot-x {
+    color: var(--中灰);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0.5%;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.init-slot-x:hover {
+    color: var(--紅);
+}
+.init-arrow {
+    color: var(--深灰);
+    font-size: 14px;
+    flex-shrink: 0;
+}
+.init-tag {
+    background: var(--白);
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    padding: 1%;
+    font-size: 13px;
+    cursor: grab;
+    user-select: none;
+    white-space: nowrap;
+    height: 30px;
+}
+.init-tag:hover {
+    border-color: var(--深灰);
+}
+.init-tag.dragging {
+    opacity: 0.3;
+}
+.init-output {
+    color: var(--深灰);
+    background: var(--米灰);
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    padding: 1%;
+    font-size: 14px;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-height: 30px;
+}
+/* ── 回合區塊 ── */
+
+.round-block {
+    border: 2px solid var(--中灰);
+    border-radius: 10px;
+    margin-bottom: 2.5%;
+    overflow: hidden;
+}
+.round-head {
+    background: var(--米灰);
+    padding: 1.5%;
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.05em;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+.round-label {
+    font-size: 14px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.round-block.collapsed .round-body, .round-block.collapsed .confirm-row {
+    display: none
+}
+.round-body {
+    padding: 3.5%;
+}
+/* 鎖定編輯狀態 */
+
+.round-block.locked .round-body {
+    pointer-events: none;
+    opacity: 0.3;
+}
+.atk-title {
+    color: var(--黑);
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5%;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.atk-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0
+}
+.divider {
+    border: none;
+    margin: 1.5% 0;
+}
+/* ── 行動區塊 ── */
+
+/* 角色名稱行 */
+
+.actor-row {
+    background: var(--米灰);
+    display: flex;
+    gap: 10px;
+    margin: 1.5% 0;
+    padding: 1.5%;
+    justify-content: space-between;
+    align-items: center;
+    height: 30px;
+}
+.actor-name {
+    font-size: 14px;
+    font-weight: bold;
+}
+.actor-name.grace {
+    color: var(--紅);
+}
+select.f-sel {
+    background: none;
+    border: none;
+    font-size: 14px;
+    text-align: right;
+    padding-right: 1%;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+select.f-sel:focus {
+    outline: none;
+}
+/* 子行（縮排的輸入列） */
+
+.sub-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin: 2.5%;
+    flex-wrap: nowrap;
+}
+/* 目標 badge（編號樣式） */
+
+.target-badge {
+    font-size: 13px;
+    background: var(--米灰);
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    height: 30px;
+    align-items: center;
+    padding: 1%;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+/* 貼骰框 */
+
+.paste-box {
+    background: var(--白);
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    position: relative;
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    padding: 1%;
+    cursor: text;
+    overflow: hidden;
+}
+.paste-box:focus-within {
+    border-color: var(--黑);
+    border-style: solid;
+}
+.paste-box.has-dice {
+    border-style: solid;
+    border-color: var(--黑);
+}
+.paste-box.flash {
+    border-color: var(--紅);
+}
+.paste-box textarea {
+    font-size: 14px;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 30px;
+    resize: none;
+    border: none;
+    background: transparent;
+    cursor: text;
+}
+.dice-chips {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+    pointer-events: none;
+    overflow: hidden
+}
+.chip {
+    background: var(--白);
+    border-radius: 5px;
+    padding: 1px 5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+.chip svg {
+    width: 12px;
+    height: 12px
+}
+.chip-num {
+    font-size: 12px;
+}
+/*貼上骰子提示*/
+
+.paste-ph {
+    color: var(--淺灰);
+    font-size: 14px;
+    pointer-events: none;
+    white-space: nowrap
+}
+/*手動輸入骰子*/
+
+.f-manual {
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    padding: 1%;
+    font-size: 14px;
+    width: 100px;
+    height: 30px;
+    flex-shrink: 0;
+}
+.f-manual:focus {
+    border-color: var(--黑);
+    outline: none;
+}
+.paste-total {
+    font-size: 18px;
+    font-weight: bold;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 30px;
+    text-align: right;
+}
+.grace-bonus {
+    color: var(--紅);
+    font-size: 18px;
+    font-weight: bold;
+    white-space: nowrap;
+    min-width: 30px;
+    text-align: left;
+    flex-shrink: 0;
+}
+/* 黑之恩典按鈕 */
+
+.btn-grace {
+    color: var(--紅);
+    background: var(--白);
+    border: 2px solid var(--紅);
+    border-radius: 5px;
+    height: 30px;
+    padding: 1%;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.btn-grace.active {
+    color: var(--白);
+    background: var(--紅);
+}
+/* 死亡提示 */
+
+.dead-note {
+    color: var(--深灰);
+    font-size: 14px;
+    padding-left: 0.5%;
+}
+/* atk-section 分隔 */
+
+.atk-section, .atk-section-title {
+    margin-bottom: 0.5%;
+}
+.atk-section-title {
+    color: var(--黑);
+    font-size: 14px;
+    font-weight: bold;
+}
+/* ── 確認區 ── */
+
+.confirm-row {
+    background: var(--米灰);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 3.5%;
+    flex-wrap: wrap;
+}
+.confirm-preview {
+    color: var(--深灰);
+    font-size: 14px;
+    flex: 1;
+    min-width: 0;
+    white-space: pre-line;
+    line-height: 1.6;
+}
+.confirm-btns {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.done-summary {
+    color: var(--黑);
+    background: var(--白);
+    font-size: 14px;
+    padding: 3.5%;
+    white-space: pre-line;
+    line-height: 1.7;
+    display: none;
+}
+/* ── HP badges ── */
+
+.hp-badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: stretch;
+    gap: 5px;
+    width: 500px;
+    float: right;
+}
+.hp-badge {
+    background: var(--白);
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    font-size: 12px;
+    padding: 1%;
+    white-space: nowrap;
+    height: 25px;
+}
+.hp-badge.dead {
+    color: var(--紅);
+    border-color: var(--紅);
+}
+.hp-badge.low {
+    color: var(--橘);
+    border-color: var(--橘);
+}
+/* ── 提示文字 ── */
+
+.hint-text {
+    font-size: 12px;
+    color: var(--中灰);
+    margin-bottom: 1.5%;
+}
+/* ── 行動順序格子內名字 ── */
+
+.init-slot-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    text-align: center;
+}
+/* ── 敵人名字（紫色）── */
+
+.actor-name.enemy {
+    color: var(--紫);
+}
+/* ── 復活說明 ── */
+
+.revive-note {
+    font-size: 14px;
+    color: var(--深灰);
+}
+/* ── 戰鬥結束框 ── */
+
+#battleEndMsg {
+    background: var(--白);
+    border-radius: 10px;
+    margin-top: 1.5%;
+    border: 2px solid var(--紅);
+    overflow: hidden;
+}
+.battle-end-header {
+    text-align: center;
+    padding: 2.5%;
+    font-weight: bold;
+}
+/* ── 戰利品區 ── */
+
+.loot-section {
+    border-top: 2px solid var(--紅);
+    padding: 3.5%;
+}
+.loot-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--紅);
+    margin-bottom: 1.5%;
+}
+.loot-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 1.5%;
+}
+.loot-label {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+#lootInput {
+    flex: 1;
+    height: 30px;
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    padding: 1.5%;
+    font-size: 14px;
+    min-width: 0;
+}
+#lootOutput {
+    background: var(--米灰);
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    padding: 1%;
+    font-size: 14px;
+    white-space: pre-line;
+    line-height: 1.7;
+    cursor: pointer;
+    color: var(--深灰);
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>【簡易戰鬥輔助】</h1>
+<div class="sub">血祭之里企劃用｜複製骰子或手動輸入傷害</div>
+
+<!-- ══ 玩家角色 ══ -->
+<div class="section">
+  <div class="section-head">👤 我方角色</div>
+  <div class="section-body">
+    <div id="playerList"></div>
+    <button class="btn-add" onclick="addUnit('player')">＋ 新增角色</button>
+  </div>
+</div>
+
+<!-- ══ 敵方 ══ -->
+<div class="section">
+  <div class="section-head">👻 敵方角色</div>
+  <div class="section-body">
+    <div id="enemyList"></div>
+  </div>
+</div>
+
+<!-- ══ 行動順序 ══ -->
+<div class="section">
+  <div class="section-head">🎯 行動順序</div>
+  <div class="section-body">
+    <div class="hint-text">拖動角色到下方格子，已排入者會自動從名單移除。</div>
+    <div class="init-pool" id="initPool"></div>
+    <div class="init-order-wrap" id="initOrder"></div>
+    <div class="init-output" id="initOutput"></div>
+  </div>
+</div>
+
+<!-- ══ 回合 ══ -->
+<div id="roundsContainer"></div>
+<button class="btn-new-round" id="newRoundBtn" onclick="addRound()">新增回合</button>
+
+</div>
+<script>
+/* ── Dice ── */
+
+// D6
+const DICE_MAP={
+  '982b22808f930c44a01f':1,
+  'f1f556d49cb33bb46c61':2,
+  'd4170e997ff7f06ccb56':3,
+  '8b6ff6c05dc1c3b74e47':4,
+  '91d962f6751067697958':5,
+  '72d18a49f6c6619c7c9e':6
+};
+
+// D4
+const D4_MAP={
+  '551cd00a0755c2bf3c62':1,
+  '6c42bc8a8ac354736e29':2,
+  '72a3d1094d456751e027':3,
+  'dc596798287f11c05809':4
+};
+
+// D6 點數位置
+const DOT_POS={
+  1:[[8,8]],
+  2:[[4,4],[12,12]],
+  3:[[4,4],[8,8],[12,12]],
+  4:[[4,4],[12,4],[4,12],[12,12]],
+  5:[[4,4],[12,4],[8,8],[4,12],[12,12]],
+  6:[[4,3],[12,3],[4,8],[12,8],[4,13],[12,13]]
+};
+
+// D6 SVG
+function diceSVG(v){
+  const d=(DOT_POS[v]||[])
+    .map(([cx,cy])=>`<circle cx="${cx}" cy="${cy}" r="1.8" fill="#333"/>`)
+    .join('');
+  return `<svg viewBox="0 0 16 16">
+    <rect x=".75" y=".75" width="14.5" height="14.5" rx="3"
+      fill="#eee" stroke="#aaa" stroke-width="1"/>
+    ${d}
+  </svg>`;
+}
+
+// D4 SVG
+function diceSVG_D4(v){
+  return `<svg viewBox="0 0 16 16">
+    <rect x=".75" y=".75" width="14.5" height="14.5" rx="3"
+      fill="#eee" stroke="#aaa" stroke-width="1"/>
+    <text x="8" y="10.5"
+      text-anchor="middle"
+      font-size="9"
+      fill="#333"
+      font-family="sans-serif"
+      font-weight="bold">${v}</text>
+  </svg>`;
+}
+
+// URL 辨識
+function lookupUrl(url){
+  const m=url.match(/\/([^/]+)\.png$/i);
+  if(!m)return null;
+  const key=m[1];
+  if(DICE_MAP[key]) return {type:'d6',value:DICE_MAP[key]};
+  if(D4_MAP[key]) return {type:'d4',value:D4_MAP[key]};
+  return null;
+}
+
+// 擷取骰子
+function extractDice(txt,html){
+  const s=(txt||'')+'\n'+(html||'');
+  return [...s.matchAll(/https?:\/\/s\.plurk\.com\/[^\s"'<>\]]+\.png/gi)]
+    .map(m=>lookupUrl(m[0]))
+    .filter(v=>v!==null);
+}
+
+// 計算
+function calcDiceTotal(arr){
+  return arr.reduce((s,d)=>s+d.value,0);
+}
+
+// ── 其他工具函數 ──
+function toHalfWidth(str){
+  return str.replace(/[！-～]/g,r=>String.fromCharCode(r.charCodeAt(0)-65248))
+    .replace(/　/g,' ')
+    .replace(/[＋]/g,'+')
+    .replace(/[－]/g,'-')
+    .replace(/[＊×]/g,'*')
+    .replace(/[÷]/g,'/');
+}
+
+function evalManual(str){
+  const c=toHalfWidth(str);
+  if(!/^[\d\s\+\-\*\/\.]+$/.test(c))return null;
+  try{
+    const v=Function('"use strict";return('+c+')')();
+    return isFinite(v)?Math.round(v):null;
+  }catch{return null;}
+}
+
+function esc(s){
+  return (s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;');
+}
+
+/* ── State ── */
+let players=[],enemies=[],rounds=[];
+let nextPid=1,nextEid=1,nextRid=1;
+let initOrder=[];
+
+/* ── Persistence ── */
+function saveUnits(){
+  localStorage.setItem('plurk_battle_units',JSON.stringify({
+    players:players.map(u=>({name:u.name,maxHp:u.maxHp,grace:u.grace})),
+    enemies:enemies.map(u=>({name:u.name,maxHp:u.maxHp}))
+  }));
+}
+function loadUnits(){
+  const saved=localStorage.getItem('plurk_battle_units');
+  if(saved){
+    try{
+      const d=JSON.parse(saved);
+      players=d.players.map(u=>({id:nextPid++,side:'player',name:u.name,maxHp:u.maxHp,hp:u.maxHp,grace:u.grace}));
+      enemies=d.enemies.map(u=>({id:nextEid++,side:'enemy',name:u.name,maxHp:u.maxHp,hp:u.maxHp,grace:false}));
+    }catch(e){console.error(e);}
+  }
+  if(!players.length)players=[{id:nextPid++,side:'player',name:'玩家1',maxHp:10,hp:10,grace:false}];
+  if(!enemies.length)enemies=[{id:nextEid++,side:'enemy',name:'怨靈組',maxHp:10,hp:10,grace:false}];
+}
+
+/* ── Units ── */
+function addUnit(side){
+  if(side==='enemy')return;
+  const id=nextPid++;
+  players.push({id,side:'player',name:'',maxHp:10,hp:10,grace:false});
+  saveUnits();renderSetup();refreshCurrentRound();
+}
+function removeUnit(side,id){
+  if(side==='enemy')return;
+  if(side==='player'&&players.length<=1)return;
+  players=players.filter(u=>u.id!==id);
+  initOrder=initOrder.filter(s=>!s||!(s.side===side&&s.id===id));
+  saveUnits();renderSetup();refreshCurrentRound();
+}
+function syncUnit(side,id,field,val){
+  const list=side==='player'?players:enemies;
+  const u=list.find(u=>u.id===id);if(!u)return;
+  if(field==='maxHp'){val=parseInt(val)||0;u.maxHp=val;u.hp=val;}
+  else if(field==='grace'){u.grace=!!val;}
+  else u[field]=val;
+  saveUnits();renderInitPool();renderInitOutput();refreshCurrentRound();
+}
+function refreshCurrentRound(){
+  const last=rounds[rounds.length-1];
+  if(last&&!last.confirmed)renderRound(last);
+}
+
+function renderSetup(){
+  renderUnitList('playerList','player');
+  renderUnitList('enemyList','enemy');
+  renderInitFull();
+}
+function renderUnitList(elId,side){
+  const list=side==='player'?players:enemies;
+  const el=document.getElementById(elId);el.innerHTML='';
+  list.forEach((u,i)=>{
+    const row=document.createElement('div');row.className='unit-row';
+    const grace=side==='player'
+      ?`<button class="btn-grace${u.grace?' active':''}" onclick="syncUnit('player',${u.id},'grace',${!u.grace});renderSetup();refreshCurrentRound()">黑之恩典</button>`:'';
+    const del=(side==='player'&&list.length>1)
+      ?`<button class="btn-icon danger" onclick="removeUnit('player',${u.id})">×</button>`:'';
+    const dragAttr=side==='player'?' draggable="true" class="target-badge drag-handle"':'  class="target-badge"';
+    row.innerHTML=`<span${dragAttr}>#${i+1}</span>
+      <input class="f-name" placeholder="名稱" value="${esc(u.name)}" oninput="syncUnit('${side}',${u.id},'name',this.value)">
+      <span class="hp-label">HP</span>
+      <input class="f-hp" type="number" min="0" value="${u.maxHp}" oninput="syncUnit('${side}',${u.id},'maxHp',this.value)">
+      ${grace}${del}`;
+    if(side==='player'){
+      // 拖動排序事件
+      const badge=row.querySelector('span[draggable]');
+      badge.addEventListener('dragstart',e=>{
+        e.dataTransfer.setData('text/plain',String(u.id));
+        e.dataTransfer.effectAllowed='move';
+        setTimeout(()=>row.classList.add('dragging'),0);
+      });
+      badge.addEventListener('dragend',()=>row.classList.remove('dragging'));
+      row.addEventListener('dragover',e=>{e.preventDefault();row.classList.add('drag-over');});
+      row.addEventListener('dragleave',()=>row.classList.remove('drag-over'));
+      row.addEventListener('drop',e=>{
+        e.preventDefault();row.classList.remove('drag-over');
+        const fromId=parseInt(e.dataTransfer.getData('text/plain'));
+        const toId=u.id;
+        if(fromId===toId)return;
+        const fi=players.findIndex(p=>p.id===fromId);
+        const ti=players.findIndex(p=>p.id===toId);
+        if(fi<0||ti<0)return;
+        const [moved]=players.splice(fi,1);
+        players.splice(ti,0,moved);
+        saveUnits();renderSetup();refreshCurrentRound();
+      });
+    }
+    el.appendChild(row);
+  });
+}
+
+/* ── Initiative ── */
+function allUnits(){return[...players.map(u=>({...u,side:'player'})),...enemies.map(u=>({...u,side:'enemy'}))];}
+function unitKey(s,id){return s+'_'+id;}
+
+function renderInitFull(){
+  const all=allUnits();
+  const placedCount=initOrder.filter(Boolean).length;
+  let targetLen=(placedCount<all.length)?placedCount+1:placedCount;
+  while(initOrder.length<targetLen)initOrder.push(null);
+  while(initOrder.length>targetLen)initOrder.pop();
+  const keys=new Set(all.map(u=>unitKey(u.side,u.id)));
+  for(let i=0;i<initOrder.length;i++){
+    if(initOrder[i]&&!keys.has(unitKey(initOrder[i].side,initOrder[i].id)))initOrder[i]=null;
+  }
+  renderInitPool();renderInitSlots();renderInitOutput();
+}
+function renderInitPool(){
+  const el=document.getElementById('initPool');el.innerHTML='';
+  const placed=new Set(initOrder.filter(Boolean).map(s=>unitKey(s.side,s.id)));
+  const rem=allUnits().filter(u=>!placed.has(unitKey(u.side,u.id)));
+  el.style.display=rem.length?'flex':'none';
+  rem.forEach(u=>{
+    const tag=document.createElement('div');tag.className='init-tag';
+    tag.textContent=u.name||'#'+u.id;tag.draggable=true;tag.dataset.uid=unitKey(u.side,u.id);
+    tag.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('text/plain',JSON.stringify({from:'pool',uid:unitKey(u.side,u.id)}));
+      tag.classList.add('dragging');
+    });
+    tag.addEventListener('dragend',()=>tag.classList.remove('dragging'));
+    el.appendChild(tag);
+  });
+}
+function renderInitSlots(){
+  const el=document.getElementById('initOrder');el.innerHTML='';
+  initOrder.forEach((slot,i)=>{
+    if(i>0){const a=document.createElement('span');a.className='init-arrow';a.textContent='→';el.appendChild(a);}
+    const div=document.createElement('div');
+    if(slot){
+      const u=allUnits().find(u=>unitKey(u.side,u.id)===unitKey(slot.side,slot.id));
+      div.className='init-slot filled';div.draggable=true;
+      div.innerHTML=`<span class="init-slot-name">${u?u.name||'#'+u.id:'?'}</span>
+        <span class="init-slot-x" onclick="clearSlot(${i})">×</span>`;
+      div.addEventListener('dragstart',e=>e.dataTransfer.setData('text/plain',JSON.stringify({from:'slot',idx:i,uid:unitKey(slot.side,slot.id)})));
+    }else{
+      div.className='init-slot';div.textContent='（拖動至此處）';
+    }
+    div.addEventListener('dragover',e=>{e.preventDefault();div.classList.add('over');});
+    div.addEventListener('dragleave',()=>div.classList.remove('over'));
+    div.addEventListener('drop',e=>{
+      e.preventDefault();div.classList.remove('over');
+      const data=JSON.parse(e.dataTransfer.getData('text/plain'));
+      const [s,idStr]=data.uid.split('_');const uid={side:s,id:parseInt(idStr)};
+      if(data.from==='pool')initOrder[i]=uid;
+      else if(data.from==='slot'){const tmp=initOrder[i];initOrder[i]=initOrder[data.idx];initOrder[data.idx]=tmp;}
+      renderInitFull();refreshCurrentRound();
+    });
+    el.appendChild(div);
+  });
+}
+function clearSlot(i){initOrder[i]=null;renderInitFull();refreshCurrentRound();}
+function renderInitOutput(){
+  const el=document.getElementById('initOutput');
+  const filled=initOrder.filter(Boolean);
+  if(!filled.length){el.style.display='none';el.textContent='';return;}
+  const names=filled.map(s=>{const u=allUnits().find(u=>unitKey(u.side,u.id)===unitKey(s.side,s.id));return u?u.name||'#'+u.id:'?';});
+  const text='行動順序：'+names.join(' → ');
+  el.style.display='flex';
+  el.style.cursor='pointer';
+  el.title='點擊複製';
+  el.textContent=text;
+  el.onclick=function(){
+    navigator.clipboard.writeText(text).then(()=>{
+      const orig=el.style.borderColor;
+      el.style.borderColor='var(--紅)';
+      setTimeout(()=>{el.style.borderColor='';},600);
+    });
+  };
+}
+
+/* ── Round ── */
+function hpSnap(){
+  return{
+    players:players.map(u=>({id:u.id,name:u.name,hp:u.hp,maxHp:u.maxHp,grace:u.grace})),
+    enemies:enemies.map(u=>({id:u.id,name:u.name,hp:u.hp,maxHp:u.maxHp}))
+  };
+}
+function hpBadgesHtml(snap){
+  const all=[
+    ...snap.players.map(p=>{const cls=p.hp<=0?'dead':p.hp<=Math.ceil(p.maxHp/3)?'low':'';return`<span class="hp-badge ${cls}">${p.name||'#'+p.id} ${p.hp}/${p.maxHp}</span>`;}),
+    ...snap.enemies.map(e=>{const cls=e.hp<=0?'dead':e.hp<=Math.ceil(e.maxHp/3)?'low':'';return`<span class="hp-badge ${cls}">${e.name||'#'+e.id} ${e.hp}/${e.maxHp}</span>`;})
+  ];
+  return`<div class="hp-badges">${all.join('')}</div>`;
+}
+function updateAddRoundBtn(){
+  const btn=document.getElementById('newRoundBtn');
+  if(btn)btn.textContent=`＋ 新增回合`;
+}
+
+function addRound(){
+  const snap=hpSnap();
+  const round={
+    id:nextRid++,snapBefore:snap,confirmed:false,summary:'',
+    playerActions:players.map(p=>({pid:p.id,actionType:'attack',targetPid:null,dice:[],manualStr:'',manualVal:null})),
+    enemyAttacks:enemies.map(e=>({eid:e.id,attacks:players.filter(p=>p.hp>0).map(p=>({pid:p.id,dice:[],manualStr:'',manualVal:null}))}))
+  };
+  rounds.push(round);
+  document.getElementById('newRoundBtn').style.display='none';
+  renderRound(round);
+  updateAddRoundBtn();
+}
+
+/* 刪除回合：還原 HP 並移除 DOM */
+function deleteRound(rid){
+  const idx=rounds.findIndex(r=>r.id===rid);
+  if(idx<0)return;
+  const round=rounds[idx];
+  // 還原 HP 到此回合開始前
+  players.forEach(p=>{const s=round.snapBefore.players.find(x=>x.id===p.id);if(s)p.hp=s.hp;});
+  enemies.forEach(e=>{const s=round.snapBefore.enemies.find(x=>x.id===e.id);if(s)e.hp=s.hp;});
+  // 移除此回合及之後的所有回合（後面的 HP 都以這回合為基礎，全部作廢）
+  const removed=rounds.splice(idx);
+  removed.forEach(r=>{const el=document.getElementById(`round-${r.id}`);if(el)el.remove();});
+  nextRid=idx===0?1:rounds[rounds.length-1].id+1;
+  // 移除戰鬥結束訊息
+  const endMsg=document.getElementById('battleEndMsg');if(endMsg)endMsg.remove();
+  updateAddRoundBtn();
+  document.getElementById('newRoundBtn').style.display='block';
+}
+
+function renderRound(round){
+  let block=document.getElementById(`round-${round.id}`);
+  if(!block){
+    block=document.createElement('div');block.className='round-block';block.id=`round-${round.id}`;
+    document.getElementById('roundsContainer').appendChild(block);
+  }
+
+  block.innerHTML=`
+    <div class="round-head" onclick="toggleRound(${round.id})">
+      <span class="round-label">🎲 第 ${round.id} 回合</span>
+      <div id="rhp-${round.id}">${hpBadgesHtml(round.snapBefore)}</div>
+    </div>
+    <div class="round-body"><div id="actionList-${round.id}"></div></div>
+    <div class="confirm-row">
+      <div class="confirm-preview" id="preview-${round.id}">（尚未輸入）</div>
+      <div class="confirm-btns">
+        <button class="btn-danger" onclick="deleteRound(${round.id})">刪除回合</button>
+        <button class="btn-primary" id="cfmbtn-${round.id}" onclick="toggleConfirm(${round.id})">確認結果</button>
+      </div>
+    </div>
+    <div class="done-summary" id="summary-${round.id}" style="${round.confirmed?'display:block':''}">${round.summary?esc(round.summary).replace(/\n/g,'<br>'):''}</div>`;
+
+  if(round.confirmed){
+    block.classList.add('locked','collapsed');
+    const btn=document.getElementById(`cfmbtn-${round.id}`);
+    if(btn){btn.textContent='編輯結果';btn.classList.remove('btn-primary');btn.classList.add('btn-secondary');}
+  }
+
+  const listEl=document.getElementById(`actionList-${round.id}`);
+  const orderedKeys=initOrder.filter(Boolean).map(s=>unitKey(s.side,s.id));
+  const allKeys=allUnits().map(u=>unitKey(u.side,u.id));
+  const finalOrder=[...new Set([...orderedKeys,...allKeys])];
+
+  finalOrder.forEach(key=>{
+    const [side,idStr]=key.split('_');const id=parseInt(idStr);
+    const row=document.createElement('div');
+    if(side==='player'){
+      const pa=round.playerActions.find(a=>a.pid===id);if(pa)renderPlayerAction(round,pa,row);
+    }else{
+      const ea=round.enemyAttacks.find(a=>a.eid===id);if(ea)renderEnemyAction(round,ea,row);
+    }
+    listEl.appendChild(row);
+  });
+  updatePreview(round.id);
+}
+
+function toggleRound(rid){document.getElementById(`round-${rid}`).classList.toggle('collapsed');}
+
+/* 確認 ↔ 編輯 切換 */
+function toggleConfirm(rid){
+  const round=rounds.find(r=>r.id===rid);if(!round)return;
+  const block=document.getElementById(`round-${rid}`);
+  const btn=document.getElementById(`cfmbtn-${rid}`);
+  const sumEl=document.getElementById(`summary-${rid}`);
+
+  if(!round.confirmed){
+    // ── 確認 ──
+    applyRound(round);
+    round.confirmed=true;
+    block.classList.add('locked','collapsed');
+    sumEl.innerHTML=esc(round.summary).replace(/\n/g,'<br>');
+    sumEl.style.display='block';
+    btn.textContent='編輯結果';btn.classList.remove('btn-primary');btn.classList.add('btn-secondary');
+    document.getElementById(`rhp-${rid}`).innerHTML=hpBadgesHtml(hpSnap());
+
+    const allPlayerDead=players.every(p=>p.hp<=0);
+    const allEnemyDead=enemies.every(e=>e.hp<=0);
+    const oldEnd=document.getElementById('battleEndMsg');if(oldEnd)oldEnd.remove();
+    if(allPlayerDead||allEnemyDead){
+      const d=document.createElement('div');d.id='battleEndMsg';
+      d.id='battleEndMsg';
+      const mainMsg=allEnemyDead?'🎉 怨靈已全數祓除，戰鬥結束！':'💀 我方已全數死亡，戰鬥結束！';
+      // 戰利品區（只在敵方死亡時顯示）
+      let lootSection='';
+      if(allEnemyDead){
+        const initText='除靈成功！\n'+players.map(p=>p.name+' 獲得：').join('\n');
+        lootSection='<div class="loot-section">'
+          +'<div class="loot-title">戰利品（可編輯後複製）</div>'
+          +'<div class="loot-input-row">'
+          +'<span class="loot-label">全員獲得：</span>'
+          +'<input id="lootInput" type="text" placeholder="光明之卵x1" oninput="updateLootOutput()">'
+          +'<button onclick="clearLootInput()" class="btn-icon danger">×</button>'
+          +'</div>'
+          +'<div id="lootOutput" onclick="copyLoot()" title="點擊複製">'+initText+'</div>';
+      }
+      d.innerHTML=`<div class="battle-end-header">${mainMsg}</div>${lootSection}`;
+      document.getElementById('roundsContainer').appendChild(d);
+      document.getElementById('newRoundBtn').style.display='none';
+    }else{
+      document.getElementById('newRoundBtn').style.display='block';
+    }
+  }else{
+    // ── 編輯：解除鎖定，還原 HP，清除詳表 ──
+    players.forEach(p=>{const s=round.snapBefore.players.find(x=>x.id===p.id);if(s)p.hp=s.hp;});
+    enemies.forEach(e=>{const s=round.snapBefore.enemies.find(x=>x.id===e.id);if(s)e.hp=s.hp;});
+    round.confirmed=false;round.summary='';
+    block.classList.remove('locked','collapsed');
+    sumEl.style.display='none';sumEl.innerHTML='';
+    btn.textContent='確認結果';btn.classList.remove('btn-secondary');btn.classList.add('btn-primary');
+    const endMsg=document.getElementById('battleEndMsg');if(endMsg)endMsg.remove();
+    document.getElementById('newRoundBtn').style.display='none';
+  }
+}
+
+/* 戰利品輸出 */
+function clearLootInput(){
+  const inp=document.getElementById('lootInput');
+  if(inp){inp.value='';updateLootOutput();}
+}
+function updateLootOutput(){
+  const el=document.getElementById('lootOutput');if(!el)return;
+  const inp=document.getElementById('lootInput');
+  const item=inp?inp.value.trim():'';
+  const lines=['除靈成功！',...players.map(p=>p.name+' 獲得：'+(item||''))];
+  el.textContent=lines.join('\n');
+}
+function copyLoot(){
+  const el=document.getElementById('lootOutput');if(!el)return;
+  navigator.clipboard.writeText(el.textContent).then(()=>{
+    const orig=el.title;el.style.borderColor='var(--紅)';
+    setTimeout(()=>{el.style.borderColor='var(--淺灰)';},600);
+  });
+}
+
+/* 實際結算，只寫 HP、不動 DOM */
+function applyRound(round){
+  players.forEach(p=>{const s=round.snapBefore.players.find(x=>x.id===p.id);if(s)p.hp=s.hp;});
+  enemies.forEach(e=>{const s=round.snapBefore.enemies.find(x=>x.id===e.id);if(s)e.hp=s.hp;});
+
+  const lines=[];
+  const order=initOrder.filter(Boolean).map(s=>unitKey(s.side,s.id));
+  const remaining=allUnits().map(u=>unitKey(u.side,u.id)).filter(k=>!order.includes(k));
+
+  [...order,...remaining].forEach(key=>{
+    const [side,idStr]=key.split('_');const id=parseInt(idStr);
+    if(side==='player'){
+      const pa=round.playerActions.find(a=>a.pid===id);const p=players.find(u=>u.id===id);
+      if(!pa||!p||p.hp<=0)return;
+      if(pa.actionType==='attack'){
+        const e=enemies[0];const tot=calcPaTot(pa,p);
+        if(e&&tot!==null&&e.hp>0){const b=e.hp;e.hp=Math.max(0,e.hp-tot);lines.push(`${p.name} 攻擊 ${e.name} -${tot} (${b}→${e.hp})${e.hp<=0?' 💀':''}`);}
+      }else if(pa.actionType==='heal'){
+        const tp=players.find(u=>u.id===pa.targetPid);const tot=calcPaTot(pa,p);
+        if(tp&&tot!==null&&tp.hp>0){const b=tp.hp;tp.hp=Math.min(tp.maxHp,tp.hp+tot);lines.push(`${p.name} 治療 ${tp.name} +${tot} (${b}→${tp.hp})`);}
+      }else if(pa.actionType==='revive'){
+        const tp=players.find(u=>u.id===pa.targetPid);
+        // 執行時才確認即時 HP 是否仍 >= 10（例如怪物先打導致 HP 不足）
+        if(tp&&tp.hp<=0&&p.hp>=10){const b=p.hp;tp.hp=tp.maxHp;p.hp=Math.max(0,p.hp-10);lines.push(`${p.name} 復活 ${tp.name} (${b}→${p.hp})${p.hp<=0?' 💀':''}`);}
+        else if(tp&&tp.hp<=0&&p.hp<10){lines.push(`${p.name} 嘗試復活 ${tp.name}，但 HP 不足（當前 ${p.hp}）— 復活失敗`);}
+      }
+    }else{
+      const ea=round.enemyAttacks.find(a=>a.eid===id);const e=enemies.find(u=>u.id===id);
+      if(!ea||!e||e.hp<=0)return;
+      ea.attacks.forEach(atk=>{
+        const p=players.find(u=>u.id===atk.pid);const tot=calcAtkTot(atk);
+        if(p&&tot!==null&&p.hp>0){const b=p.hp;p.hp=Math.max(0,p.hp-tot);lines.push(`${e.name} 攻擊 ${p.name} -${tot} (${b}→${p.hp})${p.hp<=0?' 💀':''}`);}
+      });
+    }
+  });
+  round.summary=lines.join('\n')||'本回合無人行動';
+}
+
+/* ── 渲染行動 ── */
+function renderPlayerAction(round,pa,row){
+  const pSnap=round.snapBefore.players.find(u=>u.id===pa.pid);
+  row.style.display='block';
+  if(!pSnap||pSnap.hp<=0){
+    row.innerHTML=`<div class="actor-row"><span class="actor-name">${(pSnap?pSnap.name:'')||'#'+pa.pid}</span><span class="dead-note">💀 已倒下，無法行動</span></div>`;
+    return;
+  }
+  const hasDead=round.snapBefore.players.some(pl=>pl.hp<=0);
+  const canRevive=pSnap.hp>=10&&hasDead;
+  const opts=[{v:'attack',n:'攻擊'},{v:'heal',n:'回復'},{v:'revive',n:'復活',dis:!canRevive}]
+    .map(o=>`<option value="${o.v}"${pa.actionType===o.v?' selected':''} ${o.dis?' disabled':''} >${o.n}${o.dis?'':''}</option>`).join('');
+  let targetHtml='';
+  if(pa.actionType==='heal'){
+    const tOpts=round.snapBefore.players.filter(pl=>pl.hp>0).map(pl=>`<option value="${pl.id}"${pa.targetPid===pl.id?' selected':''} >${pl.name||'#'+pl.id}</option>`).join('');
+    targetHtml=`<select class="f-sel" onchange="setTarget(${round.id},${pa.pid},this.value)">${tOpts}</select>`;
+  }else if(pa.actionType==='revive'){
+    const dead=round.snapBefore.players.filter(pl=>pl.hp<=0);
+    const tOpts=dead.length?dead.map(pl=>`<option value="${pl.id}"${pa.targetPid===pl.id?' selected':''} >${pl.name||'#'+pl.id}</option>`).join(''):'<option>無死者</option>';
+    targetHtml=`<select class="f-sel" onchange="setTarget(${round.id},${pa.pid},this.value)">${tOpts}</select>`;
+  }
+  const isRevive=pa.actionType==='revive';
+  const tot=calcPaTot(pa,pSnap);
+  const showGrace=pa.actionType==='attack'&&pSnap.grace;
+  const baseVal=(tot!==null&&showGrace)?tot-10:tot;
+  const eName=enemies[0]?enemies[0].name||'怨靈':'怨靈';
+  const subRow=isRevive
+    ?`<div class="sub-row">${targetHtml}<span class="revive-note">HP－10，目標回滿血</span></div>`
+    :`<div class="sub-row">
+        ${pa.actionType==='attack'?`<span class="target-badge">${eName}</span>`:targetHtml}
+        <div class="paste-box${pa.dice.length?' has-dice':''}" id="pb-p-${round.id}-${pa.pid}">
+          <div class="dice-chips">${pa.dice.length
+            ?pa.dice.map(d=>`<span class="chip">${d.type==='d4' ? diceSVG_D4(d.value) : diceSVG(d.value)}<span class="chip-num">${d.value}</span></span>`).join('')
+            :'<span class="paste-ph">貼上骰子</span>'}</div>
+          <textarea onpaste="handlePaste(event,'player',${round.id},${pa.pid})"></textarea>
+        </div>
+        <input class="f-manual" type="tel" placeholder="手動輸入" value="${esc(pa.manualStr)}"
+          onblur="handleManual(event,'player',${round.id},${pa.pid})"
+          onkeydown="if(event.key==='Enter')this.blur()">
+        <button class="btn-icon danger" onclick="clearEntry('player',${round.id},${pa.pid})">×</button>
+        <span class="paste-total">${baseVal!==null?baseVal:''}</span>
+        <span class="grace-bonus" style="${showGrace?'':' visibility:hidden'}">+10</span>
+      </div>`;
+  row.innerHTML=`<div class="actor-row">
+    <span class="actor-name${pSnap.grace?' grace':''}">${pSnap.name||'#'+pa.pid}</span>
+    <select class="f-sel" onchange="setActionType(${round.id},${pa.pid},this.value)">${opts}</select>
+  </div>${subRow}`;
+}
+
+function renderEnemyAction(round,ea,container){
+  const eSnap=round.snapBefore.enemies.find(u=>u.id===ea.eid);
+  if(!eSnap||eSnap.hp<=0)return;
+  container.style.display='block';
+  // 怨靈名稱行
+  const titleRow=document.createElement('div');titleRow.className='actor-row';
+  titleRow.innerHTML=`<span class="actor-name enemy">${eSnap.name||'#'+ea.eid}</span>`;
+  container.appendChild(titleRow);
+  // 每位玩家的子行，目標用 #編號
+  ea.attacks.forEach((atk,i)=>{
+    const pSnap=round.snapBefore.players.find(u=>u.id===atk.pid);if(!pSnap)return;
+    const tot=calcAtkTot(atk);
+    const pIdx=round.snapBefore.players.findIndex(u=>u.id===atk.pid)+1;
+    const subRow=document.createElement('div');subRow.className='sub-row';
+    subRow.innerHTML=`<span class="target-badge">#${pIdx}</span>
+      <div class="paste-box${atk.dice.length?' has-dice':''}">
+        <div class="dice-chips">${atk.dice.length
+          ?atk.dice.map(d=>`<span class="chip">${d.type==='d4' ? diceSVG_D4(d.value) : diceSVG(d.value)}<span class="chip-num">${d.value}</span></span>`).join('')
+          :'<span class="paste-ph">貼上骰子</span>'}</div>
+        <textarea onpaste="handlePaste(event,'enemy',${round.id},${ea.eid},${atk.pid})"></textarea>
+      </div>
+      <input class="f-manual" type="tel" placeholder="手動輸入" value="${esc(atk.manualStr)}"
+        onblur="handleManual(event,'enemy',${round.id},${ea.eid},${atk.pid})"
+        onkeydown="if(event.key==='Enter')this.blur()">
+      <button class="btn-icon danger" onclick="clearEntry('enemy',${round.id},${ea.eid},${atk.pid})">×</button>
+      <span class="paste-total">${tot!==null?tot:''}</span>
+      <span class="grace-bonus" style="visibility:hidden">+10</span>`;
+    container.appendChild(subRow);
+  });
+}
+
+/* ── Calc ── */
+function calcPaTot(pa,p){
+  if(pa.actionType==='revive')return null;
+  if(!pa.dice.length&&pa.manualVal===null)return null;
+  let v=pa.dice.reduce((s,d)=>s+d.value,0)+(pa.manualVal??0);
+  if(pa.actionType==='attack'&&p.grace)v+=10;
+  return v;
+}
+function calcAtkTot(atk){
+  if(!atk.dice.length&&atk.manualVal===null)return null;
+  return atk.dice.reduce((s,d)=>s+d.value,0)+(atk.manualVal??0);
+}
+
+/* ── Event handlers ── */
+function setActionType(rid,pid,val){
+  const r=rounds.find(x=>x.id===rid);const pa=r.playerActions.find(a=>a.pid===pid);
+  pa.actionType=val;pa.targetPid=null;
+  if(val==='revive')pa.targetPid=r.snapBefore.players.find(p=>p.hp<=0)?.id??null;
+  if(val==='heal')pa.targetPid=r.snapBefore.players.find(p=>p.hp>0)?.id??null;
+  renderRound(r);
+}
+function setTarget(rid,pid,val){
+  const r=rounds.find(x=>x.id===rid);const pa=r.playerActions.find(a=>a.pid===pid);
+  pa.targetPid=parseInt(val);updatePreview(rid);
+}
+function handlePaste(event,side,rid,idA,idB){
+  event.preventDefault();
+  const dice=extractDice(event.clipboardData.getData('text/plain'),event.clipboardData.getData('text/html'));
+  if(!dice.length)return;
+  const r=rounds.find(x=>x.id===rid);
+  if(side==='player'){const pa=r.playerActions.find(a=>a.pid===idA);pa.dice=[...pa.dice,...dice];}
+  else{const ea=r.enemyAttacks.find(a=>a.eid===idA);const atk=ea.attacks.find(a=>a.pid===idB);atk.dice=[...atk.dice,...dice];}
+  renderRound(r);
+}
+function handleManual(event,side,rid,idA,idB){
+  let input=event.target;let raw=input.value;
+  let converted=toHalfWidth(raw);if(raw!==converted)input.value=converted;
+  const numericVal=converted.trim()?evalManual(converted):null;
+  const r=rounds.find(x=>x.id===rid);
+  if(side==='player'){const pa=r.playerActions.find(a=>a.pid===idA);pa.manualStr=converted;pa.manualVal=numericVal;}
+  else{const ea=r.enemyAttacks.find(a=>a.eid===idA);const atk=ea.attacks.find(a=>a.pid===idB);atk.manualStr=converted;atk.manualVal=numericVal;}
+  renderRound(r);
+}
+function clearEntry(side,rid,idA,idB){
+  const r=rounds.find(x=>x.id===rid);
+  if(side==='player'){const pa=r.playerActions.find(a=>a.pid===idA);pa.dice=[];pa.manualStr='';pa.manualVal=null;}
+  else{const ea=r.enemyAttacks.find(a=>a.eid===idA);const atk=ea.attacks.find(a=>a.pid===idB);atk.dice=[];atk.manualStr='';atk.manualVal=null;}
+  renderRound(r);
+}
+function updatePreview(rid){
+  const r=rounds.find(x=>x.id===rid);const lines=[];
+  r.playerActions.forEach(pa=>{
+    const p=r.snapBefore.players.find(u=>u.id===pa.pid);if(!p||p.hp<=0)return;
+    if(pa.actionType==='attack'){const tot=calcPaTot(pa,p);if(tot!==null)lines.push(`${p.name} 攻擊：${tot}`);}
+    else if(pa.actionType==='heal'){const tot=calcPaTot(pa,p);const tp=r.snapBefore.players.find(u=>u.id===pa.targetPid);if(tot!==null&&tp)lines.push(`${p.name} 治療 ${tp.name}：${tot}`);}
+    else if(pa.actionType==='revive'){const tp=r.snapBefore.players.find(u=>u.id===pa.targetPid);if(tp)lines.push(`${p.name} 復活 ${tp.name}`);}
+  });
+  r.enemyAttacks.forEach(ea=>{
+    const e=r.snapBefore.enemies.find(u=>u.id===ea.eid);if(!e||e.hp<=0)return;
+    ea.attacks.forEach(atk=>{
+      const tot=calcAtkTot(atk);const p=r.snapBefore.players.find(u=>u.id===atk.pid);
+      if(tot!==null&&p)lines.push(`${e.name}→${p.name}：${tot}`);
+    });
+  });
+  const el=document.getElementById(`preview-${rid}`);
+  if(el)el.textContent=lines.join(' / ')||(initOrder.length?'等待輸入...':'請設定順序');
+}
+
+/* ── Init ── */
+loadUnits();updateAddRoundBtn();renderSetup();
+</script>
+</body>
+</html>

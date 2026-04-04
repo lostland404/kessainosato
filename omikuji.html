@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>【血祭之里】蝦蟇御神籤 v1.0</title>
+<link href='data:image/svg+xml;utf8,&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"&gt; &lt;circle cx="16" cy="16" r="16" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="16" cy="16" r="9" fill="rgb(255, 255, 255)"/&gt; &lt;circle cx="16" cy="16" r="3.5" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="13" cy="13" r="1.5" fill="rgb(255, 255, 255)"/&gt;&lt;/svg&gt;' rel="icon" type="image/svg+xml">
+<style>
+@import url(https://fonts.googleapis.com/css2?family=Huninn&display=swap);
+* {
+    /*---預設顏色---*/
+    --米灰: rgb(245, 245, 245);
+    --淺灰: rgb(220, 220, 220);
+    --中灰: rgb(150, 150, 150);
+    --深灰: rgb(60, 60, 60);
+    --黑: rgb(0, 0, 0);
+    --白: rgb(255, 255, 255);
+    --紅: rgb(178, 34, 34);
+    --橘: rgb(252, 159, 77);
+    --紫: rgb(102, 51, 153);
+    /*---吉凶顏色---*/
+    --大吉: var(--紅);
+    --吉: rgb(200, 100, 0);
+    --中吉: rgb(160, 120, 0);
+    --小吉: rgb(80, 140, 60);
+    --末吉: var(--中灰);
+    --凶: var(--紫);
+    --大凶: var(--黑);
+    --光希吉: rgb(226, 148, 59);
+    /*---其他---*/
+    font-family: "Huninn", sans-serif;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    color: var(--黑);
+    background: var(--白);
+    min-height: 100vh;
+    padding: 2.5%;
+}
+.page {
+    max-width: 650px;
+    margin: 0 auto;
+}
+h1 {
+    color: var(--紅);
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 0.15em;
+    margin-bottom: 1.5%;
+}
+.sub {
+    color: var(--深灰);
+    font-size: 14px;
+    text-align: center;
+    letter-spacing: 0.05em;
+    margin: 1% 0 2.5%;
+}
+.section {
+    border: 2px solid var(--中灰);
+    border-radius: 15px;
+    margin-bottom: 2.5%;
+    overflow: hidden;
+}
+.section-head {
+    color: var(--黑);
+    background: var(--米灰);
+    padding: 1.5%;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.05em;
+    justify-content: space-between;
+    gap: 10px;
+}
+.section-body {
+    padding: 3.5%;
+}
+/* ── 籤筒區 ── */
+
+.mikuji-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 1.5%;
+}
+.tube-wrap {
+    width: 80px;
+    height: 130px;
+    cursor: pointer;
+    user-select: none;
+}
+.tube-wrap:hover .tube-body {
+    filter: brightness(108%);
+}
+.tube-body {
+    width: 100%;
+    height: 100%;
+    transition: filter 0.15s;
+}
+.tube-wrap.shaking {
+    animation: shake 0.55s ease;
+}
+@keyframes shake {
+    0% {
+        transform: rotate(0deg);
+    }
+    15% {
+        transform: rotate(-14deg);
+    }
+    30% {
+        transform: rotate(12deg);
+    }
+    45% {
+        transform: rotate(-10deg);
+    }
+    60% {
+        transform: rotate(8deg);
+    }
+    75% {
+        transform: rotate(-5deg);
+    }
+    90% {
+        transform: rotate(3deg);
+    }
+    100% {
+        transform: rotate(0deg);
+    }
+}
+.draw-hint {
+    color: var(--中灰);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    text-align: center;
+}
+/* ── 結果卡片 ── */
+
+.result-card {
+    border: 2px solid var(--淺灰);
+    border-radius: 10px;
+    overflow: hidden;
+    display: none;
+    margin-top: 1.5%;
+}
+.result-card.show {
+    display: block;
+    animation: fadeUp 0.4s ease;
+}
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.result-top {
+    padding: 2.5%;
+    text-align: center;
+    background: var(--米灰);
+}
+.result-rank {
+    font-size: 40px;
+    font-weight: bold;
+}
+.result-body {
+    padding: 3.5%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.result-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 14px;
+    line-height: 1.65;
+}
+.result-label {
+    color: var(--白);
+    background: var(--深灰);
+    border-radius: 4px;
+    padding: 1px 7px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.result-text {
+    color: var(--黑);
+}
+.result-text a {
+    color: var(--紅);
+}
+/* ── 再抽按鈕 ── */
+
+.btn-again {
+    color: var(--深灰);
+    background: var(--白);
+    border: 2px dashed var(--淺灰);
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    width: 100%;
+    padding: 1.5%;
+    display: none;
+    margin-top: 3%;
+}
+.btn-again:hover {
+    border-color: var(--中灰);
+}
+/* 吉凶顏色 */
+
+.rank-大吉 {
+    color: var(--大吉);
+}
+.rank-吉 {
+    color: var(--吉);
+}
+.rank-中吉 {
+    color: var(--中吉);
+}
+.rank-小吉 {
+    color: var(--小吉);
+}
+.rank-末吉 {
+    color: var(--末吉);
+}
+.rank-凶 {
+    color: var(--凶);
+}
+.rank-大凶 {
+    color: var(--大凶);
+}
+.rank-光希吉 {
+    color: var(--光希吉);
+}
+</style>
+</head>
+<body>
+<div class="page">
+<h1>【蝦蟇御神籤】</h1>
+<div class="sub">血祭之里企劃用｜蝦蟇之神庇佑此地，籤文僅供參考</div>
+<div class="section">
+<div class="section-head"><span>⛩️ 籤筒</span></div>
+<div class="section-body">
+<div class="mikuji-box">
+<div class="tube-wrap" id="tubeWrap" onclick="drawOmikuji()" title="搖一搖"><svg class="tube-body" viewbox="0 0 80 130" xmlns="http://www.w3.org/2000/svg">
+<rect fill="rgb(178,34,34)" height="100" rx="8" width="60" x="10" y="20"></rect>
+<rect fill="rgb(140,20,20)" height="8" rx="4" width="60" x="10" y="20"></rect>
+<line stroke="rgb(140,20,20)" stroke-dasharray="4 5" stroke-width="1.5" x1="20" x2="20" y1="30" y2="118"></line>
+<line stroke="rgb(140,20,20)" stroke-dasharray="4 5" stroke-width="1.5" x1="40" x2="40" y1="30" y2="118"></line>
+<line stroke="rgb(140,20,20)" stroke-dasharray="4 5" stroke-width="1.5" x1="60" x2="60" y1="30" y2="118"></line>
+<ellipse cx="40" cy="20" fill="rgb(110,15,15)" rx="30" ry="8"></ellipse>
+<rect fill="rgb(255,248,220)" height="26" rx="2" width="6" x="30" y="2"></rect>
+<rect fill="rgb(255,248,220)" height="28" rx="2" width="6" x="39" y="0"></rect>
+<rect fill="rgb(255,248,220)" height="22" rx="2" width="5" x="48" y="4"></rect>
+<text fill="rgb(255,235,180)" font-size="13" font-weight="bold" letter-spacing="1" text-anchor="middle" x="40" y="80">御神籤</text>
+<ellipse cx="40" cy="120" fill="rgb(140,20,20)" rx="30" ry="7"></ellipse>
+</svg></div>
+<p class="draw-hint" id="drawHint">點擊籤筒求籤</p>
+</div>
+<div class="result-card" id="resultCard">
+<div class="result-top">
+<div class="result-rank" id="resultRank"></div>
+</div>
+<div class="result-body">
+<div class="result-row"><span class="result-label">總運</span> <span class="result-text" id="resultGeneral"></span></div>
+<div class="result-row"><span class="result-label">神諭</span> <span class="result-text" id="resultNote"></span></div>
+</div>
+</div>
+<button class="btn-again" id="againBtn" onclick="drawOmikuji()">↺ 再求一籤</button></div>
+</div>
+</div>
+<script>
+    const OMIKUJI = [{
+        rank: '大吉',
+        weight: 6,
+        general: '運勢極佳，諸事順遂。蝦蟇之神今日眷顧，大膽行動即可，不必猶豫。',
+        note: '此乃罕見大吉，莫忘在神社前稍作感謝。',
+    }, {
+        rank: '吉',
+        weight: 14,
+        general: '整體良好，腳踏實地自有收穫。事情不會突然爆發，慢慢來反而更穩。',
+        note: '穩定就是這張籤的核心，不必刻意求快。',
+    }, {
+        rank: '中吉',
+        weight: 12,
+        general: '運勢尚可，但需要多一點耐心，現在是準備期，還沒到收穫期，別急。',
+        note: '蝦蟇之神正在觀察你的心性，等待也是一種勇氣。',
+    }, {
+        rank: '小吉',
+        weight: 10,
+        general: '沒有大起伏，但小事順利。注意身邊細節，今天的小善意可能意外重要。',
+        note: '你最近似乎太忙，忘了照顧自己，休息也是蝦蟇之神所祝福的事。',
+    }, {
+        rank: '末吉',
+        weight: 8,
+        general: '眼前有些阻礙，但還撐得住。這不是壞事，只是時候未到而已。',
+        note: '別擔心，等最難熬的夜晚結束，天一定會亮。',
+    }, {
+        rank: '凶',
+        weight: 7,
+        general: '這幾天少做重要決定，尤其別在情緒激動時開口或行動。',
+        note: '蝦蟇之神收回了部分庇護，提醒你反省近來行事，低調一陣子無妨。',
+    }, {
+        rank: '大凶',
+        weight: 3,
+        general: '請認真停下來想想最近做了什麼，強行前進只會讓事情更糟。',
+        note: '傳說抽到大凶者，是被蝦蟇之神選中，提醒你正視某件一直逃避的事。',
+    }, {
+        rank: '光希吉',
+        weight: 5,
+        general: '你有血光之災、容易被怨靈纏上，但慈悲的蝦蟇之神已經事先降下神諭，你只要照做就能改運！',
+        note: '你離開河間之里後，要馬上訂閱「<a href="https://www.plurk.com/wourni" target="_blank">Mitsuki Channel<\/a>」這個頻道！',
+    }, ];
+
+    function weightedRandom(list) {
+        const total = list.reduce((s, o) => s + o.weight, 0);
+        let r = Math.random() * total;
+        for (const o of list) {
+            r -= o.weight;
+            if (r <= 0) return o;
+        }
+        return list[list.length - 1];
+    }
+    let animating = false;
+
+    function drawOmikuji() {
+        if (animating) return;
+        animating = true;
+        const tube = document.getElementById('tubeWrap');
+        const hint = document.getElementById('drawHint');
+        const card = document.getElementById('resultCard');
+        const again = document.getElementById('againBtn');
+        card.classList.remove('show');
+        again.style.display = 'none';
+        hint.textContent = '抽籤中…';
+        tube.classList.add('shaking');
+        setTimeout(() => {
+            tube.classList.remove('shaking');
+            const r = weightedRandom(OMIKUJI);
+            const rankEl = document.getElementById('resultRank');
+            rankEl.textContent = r.rank;
+            rankEl.className = 'result-rank rank-' + r.rank;
+            document.getElementById('resultGeneral').textContent = r.general;
+            document.getElementById('resultNote').innerHTML = r.note;
+            card.classList.add('show');
+            again.style.display = 'block';
+            hint.textContent = '點擊籤筒求籤';
+            animating = false;
+            card.scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            });
+        }, 600);
+    }
+</script>
+</body>
+</html>

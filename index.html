@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>【血祭之里】自製小工具合集</title>
+<link href='data:image/svg+xml;utf8,&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"&gt; &lt;circle cx="16" cy="16" r="16" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="16" cy="16" r="9" fill="rgb(255, 255, 255)"/&gt; &lt;circle cx="16" cy="16" r="3.5" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="13" cy="13" r="1.5" fill="rgb(255, 255, 255)"/&gt;&lt;/svg&gt;' rel="icon" type="image/svg+xml">
+<style>
+@import url(https://fonts.googleapis.com/css2?family=Huninn&display=swap);
+* {
+    /*---預設顏色---*/
+    --米灰: rgb(245, 245, 245);
+    --淺灰: rgb(220, 220, 220);
+    --中灰: rgb(150, 150, 150);
+    --深灰: rgb(60, 60, 60);
+    --黑: rgb(0, 0, 0);
+    --白: rgb(255, 255, 255);
+    --紅: rgb(178, 34, 34);
+    --橘: rgb(252, 159, 77);
+    --紫: rgb(102, 51, 153);
+    /*---其他---*/
+    font-family: "Huninn", sans-serif;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+body {
+    color: var(--黑);
+    background: var(--白);
+    min-height: 100vh;
+    padding: 2.5%;
+}
+.page {
+    max-width: 650px;
+    margin: 0 auto;
+}
+h1 {
+    color: var(--紅);
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    letter-spacing: 0.15em;
+    margin-bottom: 1.5%;
+}
+.sub {
+    color: var(--深灰);
+    font-size: 14px;
+    text-align: center;
+    letter-spacing: 0.05em;
+    margin: 1% 0 2.5%;
+}
+.section {
+    border: 2px solid var(--中灰);
+    border-radius: 15px;
+    margin-bottom: 2.5%;
+    overflow: hidden;
+}
+.section-head {
+    color: var(--黑);
+    background: var(--米灰);
+    padding: 1.5%;
+    font-size: 14px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    letter-spacing: 0.05em;
+    justify-content: space-between;
+    gap: 10px;
+}
+.section-body {
+    padding: 3.5%;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.tool-link {
+    color: var(--黑);
+    border: 2px solid var(--淺灰);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 3.5%;
+    text-decoration: none;
+}
+.tool-link:hover {
+    border-color: var(--紅);
+}
+.tool-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.tool-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+.tool-name {
+    font-size: 14px;
+    font-weight: bold;
+}
+.tool-desc {
+    color: var(--深灰);
+    font-size: 14px;
+    line-height: 1.5em;
+}
+.tool-ver {
+    color: var(--中灰);
+    font-size: 11px;
+}
+</style>
+</head>
+<body>
+<div class="page">
+<h1>【自製小工具合集】</h1>
+<div class="sub">血祭之里企劃用｜網頁皆由 Claude 協助製作</div>
+<div class="section">
+<div class="section-head"><span>🧰 工具列表</span></div>
+<div class="section-body"><a class="tool-link" href="battle_helper.html">
+<div class="tool-icon">⚔️</div>
+<div class="tool-info">
+<div class="tool-name">簡易戰鬥輔助</div>
+<div class="tool-desc">輸入雙方角色數值，自動計算並輸出戰鬥結果。</div>
+<div class="tool-ver">v1.1</div>
+</div>
+</a> <a class="tool-link" href="omikuji.html">
+<div class="tool-icon">⛩️</div>
+<div class="tool-info">
+<div class="tool-name">蝦蟇御神籤</div>
+<div class="tool-desc">搖動籤筒求籤，蝦蟇之神將降下神諭指引今日運勢。</div>
+<div class="tool-ver">v1.0</div>
+</div>
+</a></div>
+</div>
+</div>
+</body>
+</html>
