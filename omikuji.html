@@ -89,13 +89,13 @@ h1 {
     padding-bottom: 1.5%;
 }
 .tube-wrap {
-    width: 80px;
-    height: 130px;
+    width: 250px;
+    height: auto;
     cursor: pointer;
     user-select: none;
 }
 .tube-wrap:hover .tube-body {
-    filter: brightness(108%);
+    filter: brightness(105%);
 }
 .tube-body {
     width: 100%;
@@ -251,19 +251,7 @@ h1 {
 <div class="section-head"><span>⛩️ 籤筒</span></div>
 <div class="section-body">
 <div class="mikuji-box">
-<div class="tube-wrap" id="tubeWrap" onclick="drawOmikuji()" title="搖一搖"><svg class="tube-body" viewbox="0 0 80 130" xmlns="http://www.w3.org/2000/svg">
-<rect fill="rgb(178,34,34)" height="100" rx="8" width="60" x="10" y="20"></rect>
-<rect fill="rgb(140,20,20)" height="8" rx="4" width="60" x="10" y="20"></rect>
-<line stroke="rgb(140,20,20)" stroke-dasharray="4 5" stroke-width="1.5" x1="20" x2="20" y1="30" y2="118"></line>
-<line stroke="rgb(140,20,20)" stroke-dasharray="4 5" stroke-width="1.5" x1="40" x2="40" y1="30" y2="118"></line>
-<line stroke="rgb(140,20,20)" stroke-dasharray="4 5" stroke-width="1.5" x1="60" x2="60" y1="30" y2="118"></line>
-<ellipse cx="40" cy="20" fill="rgb(110,15,15)" rx="30" ry="8"></ellipse>
-<rect fill="rgb(255,248,220)" height="26" rx="2" width="6" x="30" y="2"></rect>
-<rect fill="rgb(255,248,220)" height="28" rx="2" width="6" x="39" y="0"></rect>
-<rect fill="rgb(255,248,220)" height="22" rx="2" width="5" x="48" y="4"></rect>
-<text fill="rgb(255,235,180)" font-size="13" font-weight="bold" letter-spacing="1" text-anchor="middle" x="40" y="80">御神籤</text>
-<ellipse cx="40" cy="120" fill="rgb(140,20,20)" rx="30" ry="7"></ellipse>
-</svg></div>
+<div class="tube-wrap" id="tubeWrap" onclick="drawOmikuji()" title="搖一搖"><img class="tube-body" src="img/omikuji.png" alt="籤筒" style="object-fit:contain;"></div>
 <p class="draw-hint" id="drawHint">點擊籤筒求籤</p>
 </div>
 <div class="result-card" id="resultCard">
