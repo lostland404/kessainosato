@@ -3,12 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>【血祭之里】蝦蟇御神籤 v1.0</title>
+<title>【血祭之里】蝦蟇御神籤 v1.1</title>
 <link href='data:image/svg+xml;utf8,&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"&gt; &lt;circle cx="16" cy="16" r="16" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="16" cy="16" r="9" fill="rgb(255, 255, 255)"/&gt; &lt;circle cx="16" cy="16" r="3.5" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="13" cy="13" r="1.5" fill="rgb(255, 255, 255)"/&gt;&lt;/svg&gt;' rel="icon" type="image/svg+xml">
 <style>
 @import url(https://fonts.googleapis.com/css2?family=Huninn&display=swap);
+
+/* ── 全域變數 ── */
 * {
-    /*---預設顏色---*/
     --米灰: rgb(245, 245, 245);
     --淺灰: rgb(220, 220, 220);
     --中灰: rgb(150, 150, 150);
@@ -18,7 +19,6 @@
     --紅: rgb(178, 34, 34);
     --橘: rgb(252, 159, 77);
     --紫: rgb(102, 51, 153);
-    /*---吉凶顏色---*/
     --大吉: var(--紅);
     --吉: rgb(200, 100, 0);
     --中吉: rgb(160, 120, 0);
@@ -27,12 +27,13 @@
     --凶: var(--紫);
     --大凶: var(--黑);
     --光希吉: rgb(226, 148, 59);
-    /*---其他---*/
     font-family: "Huninn", sans-serif;
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
+
+/* ── 版面 ── */
 body {
     color: var(--黑);
     background: var(--白);
@@ -58,6 +59,8 @@ h1 {
     letter-spacing: 0.05em;
     margin: 1% 0 2.5%;
 }
+
+/* ── 區塊 ── */
 .section {
     border: 2px solid var(--中灰);
     border-radius: 15px;
@@ -76,11 +79,15 @@ h1 {
     justify-content: space-between;
     gap: 10px;
 }
+.section-head.clickable {
+    cursor: pointer;
+    user-select: none;
+}
 .section-body {
     padding: 3.5%;
 }
-/* ── 籤筒區 ── */
 
+/* ── 籤筒區 ── */
 .mikuji-box {
     display: flex;
     flex-direction: column;
@@ -100,36 +107,21 @@ h1 {
 .tube-body {
     width: 100%;
     height: 100%;
+    object-fit: contain;
     transition: filter 0.15s;
 }
 .tube-wrap.shaking {
     animation: shake 0.55s ease;
 }
 @keyframes shake {
-    0% {
-        transform: rotate(0deg);
-    }
-    15% {
-        transform: rotate(-14deg);
-    }
-    30% {
-        transform: rotate(12deg);
-    }
-    45% {
-        transform: rotate(-10deg);
-    }
-    60% {
-        transform: rotate(8deg);
-    }
-    75% {
-        transform: rotate(-5deg);
-    }
-    90% {
-        transform: rotate(3deg);
-    }
-    100% {
-        transform: rotate(0deg);
-    }
+    0%   { transform: rotate(0deg); }
+    15%  { transform: rotate(-14deg); }
+    30%  { transform: rotate(12deg); }
+    45%  { transform: rotate(-10deg); }
+    60%  { transform: rotate(8deg); }
+    75%  { transform: rotate(-5deg); }
+    90%  { transform: rotate(3deg); }
+    100% { transform: rotate(0deg); }
 }
 .draw-hint {
     color: var(--中灰);
@@ -137,8 +129,8 @@ h1 {
     letter-spacing: 0.05em;
     text-align: center;
 }
-/* ── 結果卡片 ── */
 
+/* ── 結果卡片 ── */
 .result-card {
     border: 2px solid var(--淺灰);
     border-radius: 10px;
@@ -151,14 +143,8 @@ h1 {
     animation: fadeUp 0.4s ease;
 }
 @keyframes fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 .result-top {
     padding: 2.5%;
@@ -198,8 +184,8 @@ h1 {
 .result-text a {
     color: var(--紅);
 }
-/* ── 再抽按鈕 ── */
 
+/* ── 再抽按鈕 ── */
 .btn-again {
     color: var(--深灰);
     background: var(--白);
@@ -215,31 +201,54 @@ h1 {
 .btn-again:hover {
     border-color: var(--中灰);
 }
-/* 吉凶顏色 */
 
-.rank-大吉 {
-    color: var(--大吉);
+/* ── 吉凶顏色 ── */
+.rank-大吉  { color: var(--大吉); }
+.rank-吉    { color: var(--吉); }
+.rank-中吉  { color: var(--中吉); }
+.rank-小吉  { color: var(--小吉); }
+.rank-末吉  { color: var(--末吉); }
+.rank-凶    { color: var(--凶); }
+.rank-大凶  { color: var(--大凶); }
+.rank-光希吉 { color: var(--光希吉); }
+
+/* ── 機率區塊 ── */
+.prob-row {
+    margin-bottom: 3.5%;
 }
-.rank-吉 {
-    color: var(--吉);
+.prob-row:last-child {
+    margin-bottom: 0;
 }
-.rank-中吉 {
-    color: var(--中吉);
+.prob-row-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.5%;
 }
-.rank-小吉 {
-    color: var(--小吉);
+.prob-rank-name {
+    font-size: 14px;
+    font-weight: bold;
 }
-.rank-末吉 {
-    color: var(--末吉);
+.prob-rank-name.secret {
+    filter: blur(3px);
+    transition: filter 0.8s;
 }
-.rank-凶 {
-    color: var(--凶);
+.prob-rank-name.secret.revealed {
+    filter: blur(0);
 }
-.rank-大凶 {
-    color: var(--大凶);
+.prob-rank-pct {
+    color: var(--中灰);
+    font-size: 13px;
 }
-.rank-光希吉 {
-    color: var(--光希吉);
+.prob-bar-bg {
+    background: var(--淺灰);
+    border-radius: 5px;
+    height: 8px;
+    overflow: hidden;
+}
+.prob-bar-fill {
+    height: 100%;
+    border-radius: 5px;
 }
 </style>
 </head>
@@ -247,26 +256,41 @@ h1 {
 <div class="page">
 <h1>【蝦蟇御神籤】</h1>
 <div class="sub">血祭之里企劃用｜純娛樂向，籤文內容僅供參考</div>
+
 <div class="section">
-<div class="section-head"><span>⛩️ 籤筒</span></div>
-<div class="section-body">
-<div class="mikuji-box">
-<div class="tube-wrap" id="tubeWrap" onclick="drawOmikuji()" title="搖一搖"><img class="tube-body" src="img/omikuji.png" alt="籤筒" style="object-fit:contain;"></div>
-<p class="draw-hint" id="drawHint">點擊籤筒求籤</p>
+    <div class="section-head"><span>⛩️ 籤筒</span></div>
+    <div class="section-body">
+        <div class="mikuji-box">
+            <div class="tube-wrap" id="tubeWrap" onclick="drawOmikuji()" title="搖一搖">
+                <img class="tube-body" src="img/omikuji.png" alt="籤筒">
+            </div>
+            <p class="draw-hint" id="drawHint">點擊籤筒求籤</p>
+        </div>
+        <div class="result-card" id="resultCard">
+            <div class="result-top">
+                <div class="result-rank" id="resultRank"></div>
+            </div>
+            <div class="result-body">
+                <div class="result-row"><span class="result-label">總運</span> <span class="result-text" id="resultGeneral"></span></div>
+                <div class="result-row"><span class="result-label">神諭</span> <span class="result-text" id="resultNote"></span></div>
+            </div>
+        </div>
+        <button class="btn-again" id="againBtn" onclick="drawOmikuji()">↺ 再求一籤</button>
+    </div>
 </div>
-<div class="result-card" id="resultCard">
-<div class="result-top">
-<div class="result-rank" id="resultRank"></div>
+
+<div class="section">
+    <div class="section-head clickable" onclick="toggleProb()">
+        <span>📊 各籤機率（點擊展開或收合）</span>
+    </div>
+    <div class="section-body" id="probBody" style="display:none;">
+        <div id="probList"></div>
+    </div>
 </div>
-<div class="result-body">
-<div class="result-row"><span class="result-label">總運</span> <span class="result-text" id="resultGeneral"></span></div>
-<div class="result-row"><span class="result-label">神諭</span> <span class="result-text" id="resultNote"></span></div>
-</div>
-</div>
-<button class="btn-again" id="againBtn" onclick="drawOmikuji()">↺ 再求一籤</button></div>
-</div>
+
 <div class="sub">網頁由 Claude 協助製作</div>
 </div>
+
 <script>
     const OMIKUJI = [{
         rank: '大吉',
@@ -308,7 +332,7 @@ h1 {
         weight: 5,
         general: '你有血光之災、容易被怨靈纏上，但慈悲的蝦蟇之神已經事先降下神諭，你只要照做就能改運！',
         note: '你離開河間之里後，要馬上訂閱「<a href="https://www.plurk.com/wourni" target="_blank">Mitsuki Channel<\/a>」這個頻道！',
-    }, ];
+    }];
 
     function weightedRandom(list) {
         const total = list.reduce((s, o) => s + o.weight, 0);
@@ -319,8 +343,8 @@ h1 {
         }
         return list[list.length - 1];
     }
-    let animating = false;
 
+    let animating = false;
     function drawOmikuji() {
         if (animating) return;
         animating = true;
@@ -344,11 +368,52 @@ h1 {
             again.style.display = 'block';
             hint.textContent = '點擊籤筒求籤';
             animating = false;
-            card.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest'
-            });
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }, 600);
+    }
+
+    // ── 機率區塊 ──
+    const colorMap = {
+        '大吉': 'var(--大吉)', '吉': 'var(--吉)', '中吉': 'var(--中吉)',
+        '小吉': 'var(--小吉)', '末吉': 'var(--末吉)', '凶': 'var(--凶)',
+        '大凶': 'var(--大凶)', '光希吉': 'var(--光希吉)'
+    };
+
+    (function() {
+        const total = OMIKUJI.reduce((s, o) => s + o.weight, 0);
+        const list = document.getElementById('probList');
+        OMIKUJI.forEach(o => {
+            const pct = (o.weight / total * 100).toFixed(1);
+            const isSecret = o.rank === '光希吉';
+            const row = document.createElement('div');
+            row.className = 'prob-row';
+            row.innerHTML = `
+                <div class="prob-row-head">
+                    <span class="prob-rank-name${isSecret ? ' secret' : ''}" style="color:${colorMap[o.rank] || 'inherit'}"${isSecret ? ' id="secretRankName"' : ''}>${o.rank}</span>
+                    <span class="prob-rank-pct">${pct}%（權重 ${o.weight}）</span>
+                </div>
+                <div class="prob-bar-bg">
+                    <div class="prob-bar-fill" style="width:${pct}%;background:${colorMap[o.rank] || 'var(--中灰)'}"></div>
+                </div>`;
+            list.appendChild(row);
+        });
+    })();
+
+    var probOpen = false;
+    var secretRevealed = false;
+    var secretTimer = null;
+    function toggleProb() {
+        probOpen = !probOpen;
+        document.getElementById('probBody').style.display = probOpen ? 'block' : 'none';
+        if (probOpen && !secretRevealed) {
+            secretTimer = setTimeout(function() {
+                var el = document.getElementById('secretRankName');
+                if (el) el.classList.add('revealed');
+                secretRevealed = true;
+            }, 2500);
+        } else if (!probOpen) {
+            clearTimeout(secretTimer);
+        }
     }
 </script>
 </body>
