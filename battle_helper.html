@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>【血祭之里】簡易戰鬥輔助 v2.0</title>
+<title>【血祭之里】簡易戰鬥輔助 v2.1</title>
 <link href='data:image/svg+xml;utf8,&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"&gt; &lt;circle cx="16" cy="16" r="16" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="16" cy="16" r="9" fill="rgb(255, 255, 255)"/&gt; &lt;circle cx="16" cy="16" r="3.5" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="13" cy="13" r="1.5" fill="rgb(255, 255, 255)"/&gt;&lt;/svg&gt;' rel="icon" type="image/svg+xml">
 <style>
 @import url(https://fonts.googleapis.com/css2?family=Huninn&display=swap);
@@ -650,6 +650,17 @@ select.f-sel:focus {
     font-size: 14px;
     color: var(--深灰);
 }
+/* ── 戰鬥行動區的選擇框和輸入框 ── */
+
+.sub-row select {
+    min-width: 150px;
+}
+.sub-row .f-manual {
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+    width: auto;
+}
 /* ── 戰鬥結束框 ── */
 
 #battleEndMsg {
@@ -1245,10 +1256,6 @@ function applyRound(round){
           let damage=tot;
           // 黑之恩典 +10
           if(p.grace)damage+=10;
-          // 如果自己沒穿武士服，但隊友有穿 -2
-          if(!p.items?.uniform&&players.length>1&&players.some(pm=>pm.id!==p.id&&pm.items?.uniform)){
-            damage-=2;
-          }
           // 傷害最少為 0
           damage=Math.max(0,damage);
           const b=e.hp;e.hp=Math.max(0,e.hp-damage);lines.push(`${p.name} 攻擊 ${e.name} -${damage} (${b}→${e.hp})${e.hp<=0?' 💀':''}`);}
@@ -1263,7 +1270,12 @@ function applyRound(round){
       }else if(pa.actionType==='use'){
         // 使用道具的訊息
         if(pa.manualStr){
-          lines.push(`${p.name} 使用 ${pa.manualStr}`);
+          const tp=players.find(u=>u.id===pa.targetPid);
+          if(tp&&tp.id!==p.id){
+            lines.push(`${p.name} 對 ${tp.name} 使用 ${pa.manualStr}`);
+          }else{
+            lines.push(`${p.name} 使用 ${pa.manualStr}`);
+          }
         }
       }
     }else{
@@ -1273,8 +1285,15 @@ function applyRound(round){
         const p=players.find(u=>u.id===atk.pid);const tot=calcAtkTot(atk);
         if(p&&tot!==null&&p.hp>0){
           let damage=tot;
-          // 被攻擊者穿武士服 +1
-          if(p.items?.uniform)damage+=1;
+          // 武士服效果：必須組隊（2人以上）才能用
+          if(players.length>1){
+            // 檢查是否有穿武士服的隊友在保護這個人（自己不穿）
+            const hasTeammateInUniform=!p.items?.uniform&&players.some(pm=>pm.id!==p.id&&pm.items?.uniform);
+            if(hasTeammateInUniform)damage-=2; // 被保護者傷害-2
+            
+            // 被攻擊者自己穿武士服 +1
+            if(p.items?.uniform)damage+=1;
+          }
           // 傷害最少為 0
           damage=Math.max(0,damage);
           const b=p.hp;p.hp=Math.max(0,p.hp-damage);lines.push(`${e.name} 攻擊 ${p.name} -${damage} (${b}→${p.hp})${p.hp<=0?' 💀':''}`);}
@@ -1304,14 +1323,17 @@ function renderPlayerAction(round,pa,row){
     const dead=round.snapBefore.players.filter(pl=>pl.hp<=0);
     const tOpts=dead.length?dead.map(pl=>`<option value="${pl.id}"${pa.targetPid===pl.id?' selected':''} >${pl.name||'#'+pl.id}</option>`).join(''):'<option>無死者</option>';
     targetHtml=`<select class="f-sel" onchange="setTarget(${round.id},${pa.pid},this.value)">${tOpts}</select>`;
+  }else if(pa.actionType==='use'){
+    const tOpts=round.snapBefore.players.map(pl=>`<option value="${pl.id}"${pa.targetPid===pl.id?' selected':''} >${pl.name||'#'+pl.id}</option>`).join('');
+    targetHtml=`<select class="f-sel" onchange="setTarget(${round.id},${pa.pid},this.value)">${tOpts}</select>`;
   }
   const isRevive=pa.actionType==='revive';
   const isUse=pa.actionType==='use';
   const tot=calcPaTot(pa,pSnap);
   const showGrace=pa.actionType==='attack'&&pSnap.grace;
-  // 檢查是否有隊友穿了武士服（自己沒穿）
-  const hasTeammateInUniform=pa.actionType==='attack'&&!pSnap.items?.uniform&&round.snapBefore.players.length>1&&round.snapBefore.players.some(p=>p.id!==pSnap.id&&p.items?.uniform);
+  const eName=enemies[0]?enemies[0].name||'怨靈':'怨靈';
   
+  // 計算攻擊加成
   let bonus=0;
   let bonusText='';
   let baseVal=''; // 只顯示有值時
@@ -1319,45 +1341,29 @@ function renderPlayerAction(round,pa,row){
   // 攻擊時計算加減
   if(pa.actionType==='attack'){
     if(showGrace)bonus+=10;
-    if(hasTeammateInUniform)bonus-=2;
     // 設定紅字
     bonusText=bonus!==0?(bonus>0?`+${bonus}`:`${bonus}`):'';
-    // 黑字只顯示骰子合計，不減去紅字
+    // 黑字只顯示骰子合計
+    if(tot!==null){
+      baseVal=tot;
+    }
+  }else{
+    // 非攻擊的情況下也需要計算總值
     if(tot!==null){
       baseVal=tot;
     }
   }
   
-  const eName=enemies[0]?enemies[0].name||'怨靈':'怨靈';
   let subRow='';
   
   if(isRevive){
     subRow=`<div class="sub-row">${targetHtml}<span class="revive-note">HP－10，目標回滿血</span></div>`;
   }else if(isUse){
-    // 使用道具的子行
-    subRow=`<div class="sub-row">
-      <input class="f-manual" type="text" placeholder="填寫道具名" value="${esc(pa.manualStr)}"
-        onblur="handleManual(event,'player',${round.id},${pa.pid})"
-        onkeydown="if(event.key==='Enter')this.blur()">
-      <button class="btn-icon danger" onclick="clearEntry('player',${round.id},${pa.pid})">×</button>
-    </div>`;
+    // 使用道具的子行，先選目標再填道具名
+    subRow=`<div class="sub-row">${targetHtml}<input class="f-manual" type="text" placeholder="填寫道具名" value="${esc(pa.manualStr)}" onblur="handleManual(event,'player',${round.id},${pa.pid})" onkeydown="if(event.key==='Enter')this.blur()"><button class="btn-icon danger" onclick="clearEntry('player',${round.id},${pa.pid})">×</button></div>`;
   }else{
     // 攻擊或回復的子行
-    subRow=`<div class="sub-row">
-        ${pa.actionType==='attack'?`<span class="target-badge">${eName}</span>`:targetHtml}
-        <div class="paste-box${pa.dice.length?' has-dice':''}" id="pb-p-${round.id}-${pa.pid}">
-          <div class="dice-chips">${pa.dice.length
-            ?pa.dice.map(d=>`<span class="chip">${d.type==='d4' ? diceSVG_D4(d.value) : diceSVG(d.value)}<span class="chip-num">${d.value}</span></span>`).join('')
-            :'<span class="paste-ph">貼上骰子</span>'}</div>
-          <textarea onpaste="handlePaste(event,'player',${round.id},${pa.pid})"></textarea>
-        </div>
-        <input class="f-manual" type="tel" placeholder="手動輸入" value="${esc(pa.manualStr)}"
-          onblur="handleManual(event,'player',${round.id},${pa.pid})"
-          onkeydown="if(event.key==='Enter')this.blur()">
-        <button class="btn-icon danger" onclick="clearEntry('player',${round.id},${pa.pid})">×</button>
-        <span class="paste-total">${baseVal}</span>
-        <span class="grace-bonus" style="${bonusText?'':' visibility:hidden'}">${bonusText}</span>
-      </div>`;
+    subRow=`<div class="sub-row">${pa.actionType==='attack'?`<span class="target-badge">${eName}</span>`:targetHtml}<div class="paste-box${pa.dice.length?' has-dice':''}" id="pb-p-${round.id}-${pa.pid}"><div class="dice-chips">${pa.dice.length?pa.dice.map(d=>`<span class="chip">${d.type==='d4' ? diceSVG_D4(d.value) : diceSVG(d.value)}<span class="chip-num">${d.value}</span></span>`).join(''):'<span class="paste-ph">貼上骰子</span>'}</div><textarea onpaste="handlePaste(event,'player',${round.id},${pa.pid})"></textarea></div><input class="f-manual" type="tel" placeholder="手動輸入" value="${esc(pa.manualStr)}" onblur="handleManual(event,'player',${round.id},${pa.pid})" onkeydown="if(event.key==='Enter')this.blur()"><button class="btn-icon danger" onclick="clearEntry('player',${round.id},${pa.pid})">×</button><span class="paste-total">${baseVal}</span><span class="grace-bonus" style="${bonusText?'':' visibility:hidden'}">${bonusText}</span></div>`;
   }
   
   row.innerHTML=`<div class="actor-row">
@@ -1385,8 +1391,19 @@ function renderEnemyAction(round,ea,container){
     let bonusText='';
     let baseVal=''; // 只顯示有值時
     
-    // 被攻擊者穿武士服 +1
-    if(pSnap.items?.uniform)bonus+=1;
+    // 武士服邏輯：必須組隊（2人以上）才能用
+    // A穿 → A傷害+1，無服的隊友B傷害-2
+    const isTeam=round.snapBefore.players.length>1;
+    
+    if(isTeam){
+      // 檢查被攻擊者是否有穿武士服的隊友（自己不穿）
+      const hasTeammateInUniform=!pSnap.items?.uniform &&
+                                 round.snapBefore.players.some(p=>p.id!==pSnap.id&&p.items?.uniform);
+      if(hasTeammateInUniform)bonus-=2; // 受到攻擊時傷害-2
+      
+      // 被攻擊者穿武士服時自己傷害+1
+      if(pSnap.items?.uniform)bonus+=1;
+    }
     
     // 設定紅字
     bonusText=bonus!==0?(bonus>0?`+${bonus}`:`${bonus}`):'';
@@ -1430,6 +1447,7 @@ function setActionType(rid,pid,val){
   pa.actionType=val;pa.targetPid=null;
   if(val==='revive')pa.targetPid=r.snapBefore.players.find(p=>p.hp<=0)?.id??null;
   if(val==='heal')pa.targetPid=r.snapBefore.players.find(p=>p.hp>0)?.id??null;
+  if(val==='use')pa.targetPid=r.snapBefore.players[0]?.id??null;
   renderRound(r);
 }
 function setTarget(rid,pid,val){
@@ -1497,7 +1515,7 @@ function updateItemStatus(){
     const items=[];
     if(p.items?.snack==='mochi')items.push('爆開的大福（血量上限 +4）');
     if(p.items?.snack==='sakura')items.push('發臭的櫻餅（速度 +2）');
-    if(p.items?.uniform)items.push('武士服（敵方攻擊該角色傷害 +1 / 無服隊友攻擊敵方傷害 -2）');
+    if(p.items?.uniform)items.push('武士服（該角色受傷 +1 / 場上無服隊友受傷 -2）');
     if(items.length>0){
       itemParts.push(`<div style="margin-bottom: 0.75%;"><span style="color: var(--黑); font-weight: bold;">${p.name||('#'+p.id)}</span>：${items.join(' + ')}</div>`);
     }
