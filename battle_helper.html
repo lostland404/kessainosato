@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>【血祭之里】簡易戰鬥輔助 v2.0</title>
+<title>【血祭之里】簡易戰鬥輔助 v1.1</title>
 <link href='data:image/svg+xml;utf8,&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"&gt; &lt;circle cx="16" cy="16" r="16" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="16" cy="16" r="9" fill="rgb(255, 255, 255)"/&gt; &lt;circle cx="16" cy="16" r="3.5" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="13" cy="13" r="1.5" fill="rgb(255, 255, 255)"/&gt;&lt;/svg&gt;' rel="icon" type="image/svg+xml">
 <style>
 @import url(https://fonts.googleapis.com/css2?family=Huninn&display=swap);
@@ -492,7 +492,7 @@ select.f-sel:focus {
     border-radius: 5px;
     padding: 1%;
     font-size: 14px;
-    width: 120px;
+    width: 100px;
     height: 30px;
     flex-shrink: 0;
 }
@@ -1249,6 +1249,8 @@ function applyRound(round){
           if(!p.items?.uniform&&players.length>1&&players.some(pm=>pm.id!==p.id&&pm.items?.uniform)){
             damage-=2;
           }
+          // 傷害最少為 0
+          damage=Math.max(0,damage);
           const b=e.hp;e.hp=Math.max(0,e.hp-damage);lines.push(`${p.name} 攻擊 ${e.name} -${damage} (${b}→${e.hp})${e.hp<=0?' 💀':''}`);}
       }else if(pa.actionType==='heal'){
         const tp=players.find(u=>u.id===pa.targetPid);const tot=calcPaTot(pa,p);
@@ -1261,7 +1263,7 @@ function applyRound(round){
       }else if(pa.actionType==='use'){
         // 使用道具的訊息
         if(pa.manualStr){
-          lines.push(`${p.name} 使用 ${pa.manualStr}`);
+          lines.push(`${p.name} 使用了 ${pa.manualStr} ✨`);
         }
       }
     }else{
@@ -1273,6 +1275,8 @@ function applyRound(round){
           let damage=tot;
           // 被攻擊者穿武士服 +1
           if(p.items?.uniform)damage+=1;
+          // 傷害最少為 0
+          damage=Math.max(0,damage);
           const b=p.hp;p.hp=Math.max(0,p.hp-damage);lines.push(`${e.name} 攻擊 ${p.name} -${damage} (${b}→${p.hp})${p.hp<=0?' 💀':''}`);}
       });
     }
@@ -1290,7 +1294,7 @@ function renderPlayerAction(round,pa,row){
   }
   const hasDead=round.snapBefore.players.some(pl=>pl.hp<=0);
   const canRevive=pSnap.hp>=10&&hasDead;
-  const opts=[{v:'attack',n:'攻擊'},{v:'heal',n:'回復'},{v:'use',n:'使用'},{v:'revive',n:'復活',dis:!canRevive}]
+  const opts=[{v:'attack',n:'攻擊'},{v:'heal',n:'回復'},{v:'revive',n:'復活',dis:!canRevive},{v:'use',n:'使用'}]
     .map(o=>`<option value="${o.v}"${pa.actionType===o.v?' selected':''} ${o.dis?' disabled':''} >${o.n}${o.dis?'':''}</option>`).join('');
   let targetHtml='';
   if(pa.actionType==='heal'){
@@ -1332,7 +1336,7 @@ function renderPlayerAction(round,pa,row){
   }else if(isUse){
     // 使用道具的子行
     subRow=`<div class="sub-row">
-      <input class="f-manual" type="text" placeholder="輸入道具名" value="${esc(pa.manualStr)}"
+      <input class="f-manual" type="text" placeholder="填寫使用的道具" value="${esc(pa.manualStr)}"
         onblur="handleManual(event,'player',${round.id},${pa.pid})"
         onkeydown="if(event.key==='Enter')this.blur()">
       <button class="btn-icon danger" onclick="clearEntry('player',${round.id},${pa.pid})">×</button>
