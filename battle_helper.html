@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>【血祭之里】簡易戰鬥輔助 v1.1</title>
+<title>【血祭之里】簡易戰鬥輔助 v2.0</title>
 <link href='data:image/svg+xml;utf8,&lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"&gt; &lt;circle cx="16" cy="16" r="16" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="16" cy="16" r="9" fill="rgb(255, 255, 255)"/&gt; &lt;circle cx="16" cy="16" r="3.5" fill="rgb(178, 34, 34)"/&gt; &lt;circle cx="13" cy="13" r="1.5" fill="rgb(255, 255, 255)"/&gt;&lt;/svg&gt;' rel="icon" type="image/svg+xml">
 <style>
 @import url(https://fonts.googleapis.com/css2?family=Huninn&display=swap);
@@ -16,7 +16,7 @@
     --黑: rgb(0, 0, 0);
     --白: rgb(255, 255, 255);
     --紅: rgb(178, 34, 34);
-    --橘: rgb(252, 159, 77);
+    --橘: rgb(232, 128, 37);
     --紫: rgb(102, 51, 153);
     /*---其他---*/
     font-family: "Huninn", sans-serif;
@@ -31,7 +31,7 @@ body {
     padding: 2.5%;
 }
 .page {
-    max-width: 650px;
+    max-width: 700px;
     margin: 0 auto;
 }
 /*標題*/
@@ -130,6 +130,24 @@ input.f-hp {
     flex-shrink: 0;
 }
 input.f-name:focus, input.f-hp:focus {
+    border-color: var(--黑);
+    outline: none;
+}
+.unit-row select.f-sel {
+    background: var(--白);
+    border: 2px solid var(--淺灰);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 13px;
+    height: 30px;
+    cursor: pointer;
+    text-align: left;
+    flex-shrink: 0;
+}
+.unit-row select.f-sel:hover {
+    border-color: var(--中灰);
+}
+.unit-row select.f-sel:focus {
     border-color: var(--黑);
     outline: none;
 }
@@ -474,7 +492,7 @@ select.f-sel:focus {
     border-radius: 5px;
     padding: 1%;
     font-size: 14px;
-    width: 100px;
+    width: 120px;
     height: 30px;
     flex-shrink: 0;
 }
@@ -499,24 +517,34 @@ select.f-sel:focus {
     text-align: left;
     flex-shrink: 0;
 }
-/* 黑之恩典按鈕 */
+/* 黑之恩典、武士服按鈕 */
 
-.btn-grace {
-    color: var(--紅);
+.btn-grace, .btn-uniform {
     background: var(--白);
-    border: 2px solid var(--紅);
     border-radius: 5px;
     height: 30px;
-    padding: 1%;
+    padding: 0 1%;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     white-space: nowrap;
     flex-shrink: 0;
 }
+.btn-grace {
+    color: var(--紅);
+    border: 2px solid var(--紅);
+}
 .btn-grace.active {
     color: var(--白);
     background: var(--紅);
+}
+.btn-uniform {
+    color: var(--橘);
+    border: 2px solid var(--橘);
+}
+.btn-uniform.active {
+    color: var(--白);
+    background: var(--橘);
 }
 /* 死亡提示 */
 
@@ -703,6 +731,16 @@ select.f-sel:focus {
   </div>
 </div>
 
+<!-- ══ 當前道具效果 ══ -->
+<div class="section">
+  <div class="section-head">🔍 道具效果</div>
+  <div class="section-body">
+    <div id="itemStatus" style="font-size: 13px; color: var(--深灰); line-height: 1.8;">
+      <span style="color: var(--深灰);">所有玩家皆未選擇道具</span>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 行動順序 ══ -->
 <div class="section">
   <div class="section-head">🎯 行動順序</div>
@@ -842,11 +880,11 @@ function loadUnits(){
   if(saved){
     try{
       const d=JSON.parse(saved);
-      players=d.players.map(u=>({id:nextPid++,side:'player',name:u.name,maxHp:u.maxHp,hp:u.maxHp,grace:u.grace}));
+      players=d.players.map(u=>({id:nextPid++,side:'player',name:u.name,maxHp:u.maxHp,hp:u.maxHp,grace:u.grace,items:{snack:'none',uniform:false}}));
       enemies=d.enemies.map(u=>({id:nextEid++,side:'enemy',name:u.name,maxHp:u.maxHp,hp:u.maxHp,grace:false}));
     }catch(e){console.error(e);}
   }
-  if(!players.length)players=[{id:nextPid++,side:'player',name:'玩家1',maxHp:10,hp:10,grace:false}];
+  if(!players.length)players=[{id:nextPid++,side:'player',name:'玩家1',maxHp:10,hp:10,grace:false,items:{snack:'none',uniform:false}}];
   if(!enemies.length)enemies=[{id:nextEid++,side:'enemy',name:'怨靈組',maxHp:10,hp:10,grace:false}];
 }
 
@@ -854,7 +892,7 @@ function loadUnits(){
 function addUnit(side){
   if(side==='enemy')return;
   const id=nextPid++;
-  players.push({id,side:'player',name:'',maxHp:10,hp:10,grace:false});
+  players.push({id,side:'player',name:'',maxHp:10,hp:10,grace:false,items:{snack:'none',uniform:false}});
   saveUnits();renderSetup();refreshCurrentRound();
 }
 function removeUnit(side,id){
@@ -881,6 +919,7 @@ function renderSetup(){
   renderUnitList('playerList','player');
   renderUnitList('enemyList','enemy');
   renderInitFull();
+  updateItemStatus();
 }
 function renderUnitList(elId,side){
   const list=side==='player'?players:enemies;
@@ -889,6 +928,14 @@ function renderUnitList(elId,side){
     const row=document.createElement('div');row.className='unit-row';
     const grace=side==='player'
       ?`<button class="btn-grace${u.grace?' active':''}" onclick="syncUnit('player',${u.id},'grace',${!u.grace});renderSetup();refreshCurrentRound()">黑之恩典</button>`:'';
+    const uniform=side==='player'
+      ?`<button class="btn-uniform${u.items?.uniform?' active':''}" onclick="setPlayerItem(${u.id},'uniform',${!u.items?.uniform})">武士服</button>`:'';
+    const itemsDropdown=side==='player'
+      ?`<select class="f-sel" style="flex: 0 0 auto; min-width: 120px;" onchange="setPlayerItem(${u.id},'snack',this.value)">
+          <option value="none" ${u.items?.snack==='none'?'selected':''}>不使用道具</option>
+          <option value="mochi" ${u.items?.snack==='mochi'?'selected':''}>爆開的大福</option>
+          <option value="sakura" ${u.items?.snack==='sakura'?'selected':''}>發臭的櫻餅</option>
+        </select>`:'';
     const del=(side==='player'&&list.length>1)
       ?`<button class="btn-icon danger" onclick="removeUnit('player',${u.id})">×</button>`:'';
     const dragAttr=side==='player'?' draggable="true" class="target-badge drag-handle"':'  class="target-badge"';
@@ -896,7 +943,7 @@ function renderUnitList(elId,side){
       <input class="f-name" placeholder="名稱" value="${esc(u.name)}" oninput="syncUnit('${side}',${u.id},'name',this.value)">
       <span class="hp-label">HP</span>
       <input class="f-hp" type="number" min="0" value="${u.maxHp}" oninput="syncUnit('${side}',${u.id},'maxHp',this.value)">
-      ${grace}${del}`;
+      ${grace}${uniform}${itemsDropdown}${del}`;
     if(side==='player'){
       // 拖動排序事件
       const badge=row.querySelector('span[draggable]');
@@ -1007,7 +1054,7 @@ function renderInitOutput(){
 /* ── Round ── */
 function hpSnap(){
   return{
-    players:players.map(u=>({id:u.id,name:u.name,hp:u.hp,maxHp:u.maxHp,grace:u.grace})),
+    players:players.map(u=>({id:u.id,name:u.name,hp:u.hp,maxHp:u.maxHp,grace:u.grace,items:u.items})),
     enemies:enemies.map(u=>({id:u.id,name:u.name,hp:u.hp,maxHp:u.maxHp}))
   };
 }
@@ -1194,7 +1241,15 @@ function applyRound(round){
       if(!pa||!p||p.hp<=0)return;
       if(pa.actionType==='attack'){
         const e=enemies[0];const tot=calcPaTot(pa,p);
-        if(e&&tot!==null&&e.hp>0){const b=e.hp;e.hp=Math.max(0,e.hp-tot);lines.push(`${p.name} 攻擊 ${e.name} -${tot} (${b}→${e.hp})${e.hp<=0?' 💀':''}`);}
+        if(e&&tot!==null&&e.hp>0){
+          let damage=tot;
+          // 黑之恩典 +10
+          if(p.grace)damage+=10;
+          // 如果自己沒穿武士服，但隊友有穿 -2
+          if(!p.items?.uniform&&players.length>1&&players.some(pm=>pm.id!==p.id&&pm.items?.uniform)){
+            damage-=2;
+          }
+          const b=e.hp;e.hp=Math.max(0,e.hp-damage);lines.push(`${p.name} 攻擊 ${e.name} -${damage} (${b}→${e.hp})${e.hp<=0?' 💀':''}`);}
       }else if(pa.actionType==='heal'){
         const tp=players.find(u=>u.id===pa.targetPid);const tot=calcPaTot(pa,p);
         if(tp&&tot!==null&&tp.hp>0){const b=tp.hp;tp.hp=Math.min(tp.maxHp,tp.hp+tot);lines.push(`${p.name} 治療 ${tp.name} +${tot} (${b}→${tp.hp})`);}
@@ -1203,13 +1258,22 @@ function applyRound(round){
         // 執行時才確認即時 HP 是否仍 >= 10（例如怪物先打導致 HP 不足）
         if(tp&&tp.hp<=0&&p.hp>=10){const b=p.hp;tp.hp=tp.maxHp;p.hp=Math.max(0,p.hp-10);lines.push(`${p.name} 復活 ${tp.name} (${b}→${p.hp})${p.hp<=0?' 💀':''}`);}
         else if(tp&&tp.hp<=0&&p.hp<10){lines.push(`${p.name} 嘗試復活 ${tp.name}，但 HP 不足（當前 ${p.hp}）— 復活失敗`);}
+      }else if(pa.actionType==='use'){
+        // 使用道具的訊息
+        if(pa.manualStr){
+          lines.push(`${p.name} 使用 ${pa.manualStr}`);
+        }
       }
     }else{
       const ea=round.enemyAttacks.find(a=>a.eid===id);const e=enemies.find(u=>u.id===id);
       if(!ea||!e||e.hp<=0)return;
       ea.attacks.forEach(atk=>{
         const p=players.find(u=>u.id===atk.pid);const tot=calcAtkTot(atk);
-        if(p&&tot!==null&&p.hp>0){const b=p.hp;p.hp=Math.max(0,p.hp-tot);lines.push(`${e.name} 攻擊 ${p.name} -${tot} (${b}→${p.hp})${p.hp<=0?' 💀':''}`);}
+        if(p&&tot!==null&&p.hp>0){
+          let damage=tot;
+          // 被攻擊者穿武士服 +1
+          if(p.items?.uniform)damage+=1;
+          const b=p.hp;p.hp=Math.max(0,p.hp-damage);lines.push(`${e.name} 攻擊 ${p.name} -${damage} (${b}→${p.hp})${p.hp<=0?' 💀':''}`);}
       });
     }
   });
@@ -1226,7 +1290,7 @@ function renderPlayerAction(round,pa,row){
   }
   const hasDead=round.snapBefore.players.some(pl=>pl.hp<=0);
   const canRevive=pSnap.hp>=10&&hasDead;
-  const opts=[{v:'attack',n:'攻擊'},{v:'heal',n:'回復'},{v:'revive',n:'復活',dis:!canRevive}]
+  const opts=[{v:'attack',n:'攻擊'},{v:'heal',n:'回復'},{v:'use',n:'使用'},{v:'revive',n:'復活',dis:!canRevive}]
     .map(o=>`<option value="${o.v}"${pa.actionType===o.v?' selected':''} ${o.dis?' disabled':''} >${o.n}${o.dis?'':''}</option>`).join('');
   let targetHtml='';
   if(pa.actionType==='heal'){
@@ -1238,13 +1302,44 @@ function renderPlayerAction(round,pa,row){
     targetHtml=`<select class="f-sel" onchange="setTarget(${round.id},${pa.pid},this.value)">${tOpts}</select>`;
   }
   const isRevive=pa.actionType==='revive';
+  const isUse=pa.actionType==='use';
   const tot=calcPaTot(pa,pSnap);
   const showGrace=pa.actionType==='attack'&&pSnap.grace;
-  const baseVal=(tot!==null&&showGrace)?tot-10:tot;
+  // 檢查是否有隊友穿了武士服（自己沒穿）
+  const hasTeammateInUniform=pa.actionType==='attack'&&!pSnap.items?.uniform&&round.snapBefore.players.length>1&&round.snapBefore.players.some(p=>p.id!==pSnap.id&&p.items?.uniform);
+  
+  let bonus=0;
+  let bonusText='';
+  let baseVal=''; // 只顯示有值時
+  
+  // 攻擊時計算加減
+  if(pa.actionType==='attack'){
+    if(showGrace)bonus+=10;
+    if(hasTeammateInUniform)bonus-=2;
+    // 設定紅字
+    bonusText=bonus!==0?(bonus>0?`+${bonus}`:`${bonus}`):'';
+    // 黑字只顯示骰子合計，不減去紅字
+    if(tot!==null){
+      baseVal=tot;
+    }
+  }
+  
   const eName=enemies[0]?enemies[0].name||'怨靈':'怨靈';
-  const subRow=isRevive
-    ?`<div class="sub-row">${targetHtml}<span class="revive-note">HP－10，目標回滿血</span></div>`
-    :`<div class="sub-row">
+  let subRow='';
+  
+  if(isRevive){
+    subRow=`<div class="sub-row">${targetHtml}<span class="revive-note">HP－10，目標回滿血</span></div>`;
+  }else if(isUse){
+    // 使用道具的子行
+    subRow=`<div class="sub-row">
+      <input class="f-manual" type="text" placeholder="輸入道具名" value="${esc(pa.manualStr)}"
+        onblur="handleManual(event,'player',${round.id},${pa.pid})"
+        onkeydown="if(event.key==='Enter')this.blur()">
+      <button class="btn-icon danger" onclick="clearEntry('player',${round.id},${pa.pid})">×</button>
+    </div>`;
+  }else{
+    // 攻擊或回復的子行
+    subRow=`<div class="sub-row">
         ${pa.actionType==='attack'?`<span class="target-badge">${eName}</span>`:targetHtml}
         <div class="paste-box${pa.dice.length?' has-dice':''}" id="pb-p-${round.id}-${pa.pid}">
           <div class="dice-chips">${pa.dice.length
@@ -1256,9 +1351,11 @@ function renderPlayerAction(round,pa,row){
           onblur="handleManual(event,'player',${round.id},${pa.pid})"
           onkeydown="if(event.key==='Enter')this.blur()">
         <button class="btn-icon danger" onclick="clearEntry('player',${round.id},${pa.pid})">×</button>
-        <span class="paste-total">${baseVal!==null?baseVal:''}</span>
-        <span class="grace-bonus" style="${showGrace?'':' visibility:hidden'}">+10</span>
+        <span class="paste-total">${baseVal}</span>
+        <span class="grace-bonus" style="${bonusText?'':' visibility:hidden'}">${bonusText}</span>
       </div>`;
+  }
+  
   row.innerHTML=`<div class="actor-row">
     <span class="actor-name${pSnap.grace?' grace':''}">${pSnap.name||'#'+pa.pid}</span>
     <select class="f-sel" onchange="setActionType(${round.id},${pa.pid},this.value)">${opts}</select>
@@ -1279,6 +1376,21 @@ function renderEnemyAction(round,ea,container){
     const tot=calcAtkTot(atk);
     const pIdx=round.snapBefore.players.findIndex(u=>u.id===atk.pid)+1;
     const subRow=document.createElement('div');subRow.className='sub-row';
+    // 計算被攻擊者的傷害修正
+    let bonus=0;
+    let bonusText='';
+    let baseVal=''; // 只顯示有值時
+    
+    // 被攻擊者穿武士服 +1
+    if(pSnap.items?.uniform)bonus+=1;
+    
+    // 設定紅字
+    bonusText=bonus!==0?(bonus>0?`+${bonus}`:`${bonus}`):'';
+    // 黑字只顯示骰子合計
+    if(tot!==null){
+      baseVal=tot;
+    }
+    
     subRow.innerHTML=`<span class="target-badge">#${pIdx}</span>
       <div class="paste-box${atk.dice.length?' has-dice':''}">
         <div class="dice-chips">${atk.dice.length
@@ -1290,8 +1402,8 @@ function renderEnemyAction(round,ea,container){
         onblur="handleManual(event,'enemy',${round.id},${ea.eid},${atk.pid})"
         onkeydown="if(event.key==='Enter')this.blur()">
       <button class="btn-icon danger" onclick="clearEntry('enemy',${round.id},${ea.eid},${atk.pid})">×</button>
-      <span class="paste-total">${tot!==null?tot:''}</span>
-      <span class="grace-bonus" style="visibility:hidden">+10</span>`;
+      <span class="paste-total">${baseVal}</span>
+      <span class="grace-bonus" style="${bonusText?'':' visibility:hidden'}">${bonusText}</span>`;
     container.appendChild(subRow);
   });
 }
@@ -1301,7 +1413,6 @@ function calcPaTot(pa,p){
   if(pa.actionType==='revive')return null;
   if(!pa.dice.length&&pa.manualVal===null)return null;
   let v=pa.dice.reduce((s,d)=>s+d.value,0)+(pa.manualVal??0);
-  if(pa.actionType==='attack'&&p.grace)v+=10;
   return v;
 }
 function calcAtkTot(atk){
@@ -1329,6 +1440,7 @@ function handlePaste(event,side,rid,idA,idB){
   if(side==='player'){const pa=r.playerActions.find(a=>a.pid===idA);pa.dice=[...pa.dice,...dice];}
   else{const ea=r.enemyAttacks.find(a=>a.eid===idA);const atk=ea.attacks.find(a=>a.pid===idB);atk.dice=[...atk.dice,...dice];}
   renderRound(r);
+  updatePreview(rid);
 }
 function handleManual(event,side,rid,idA,idB){
   let input=event.target;let raw=input.value;
@@ -1338,6 +1450,7 @@ function handleManual(event,side,rid,idA,idB){
   if(side==='player'){const pa=r.playerActions.find(a=>a.pid===idA);pa.manualStr=converted;pa.manualVal=numericVal;}
   else{const ea=r.enemyAttacks.find(a=>a.eid===idA);const atk=ea.attacks.find(a=>a.pid===idB);atk.manualStr=converted;atk.manualVal=numericVal;}
   renderRound(r);
+  updatePreview(rid);
 }
 function clearEntry(side,rid,idA,idB){
   const r=rounds.find(x=>x.id===rid);
@@ -1364,7 +1477,35 @@ function updatePreview(rid){
   if(el)el.textContent=lines.join(' / ')||(initOrder.length?'等待輸入...':'請設定順序');
 }
 
-/* ── Init ── */
+function setPlayerItem(pid,itemType,val){
+  const p=players.find(u=>u.id===pid);if(!p)return;
+  if(!p.items)p.items={snack:'none',uniform:false};
+  if(itemType==='snack')p.items.snack=val;
+  else if(itemType==='uniform')p.items.uniform=!!val;
+  saveUnits();renderSetup();refreshCurrentRound();
+}
+
+/* ── Item Status Update ── */
+function updateItemStatus(){
+  const statusEl=document.getElementById('itemStatus');
+  const itemParts=[];
+  players.forEach((p,i)=>{
+    const items=[];
+    if(p.items?.snack==='mochi')items.push('爆開的大福（血量上限 +4）');
+    if(p.items?.snack==='sakura')items.push('發臭的櫻餅（速度 +2）');
+    if(p.items?.uniform)items.push('武士服（敵對傷害 +1 / 隊友無服傷害 -2）');
+    if(items.length>0){
+      itemParts.push(`<div style="margin-bottom: 0.75%;"><span style="color: var(--黑); font-weight: bold;">${p.name||('#'+p.id)}</span>：${items.join(' + ')}</div>`);
+    }
+  });
+  if(itemParts.length===0){
+    statusEl.innerHTML='<span style="color: var(--深灰);">所有玩家皆未選擇道具</span>';
+  }else{
+    statusEl.innerHTML=itemParts.join('');
+  }
+}
+
+/* ── Initialization & Events ── */
 loadUnits();updateAddRoundBtn();renderSetup();
 </script>
 </body>
